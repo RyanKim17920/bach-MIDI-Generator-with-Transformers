@@ -25,7 +25,6 @@ def MIDI_data_extractor(midi_file_path):
             instr_type = 0
         print(track)
         for msg in track:
-            #FIX: find a way to get the first indexes to have instr_type and instr_num correctly: use for loop
             msg_array = np.full(15, -1)
             msg_array[-1] = msg.time
             if msg.type == 'note_on':
@@ -78,12 +77,6 @@ def MIDI_data_extractor(midi_file_path):
         track_matrix = add_column_to_2d_array(track_matrix, instr_num)
         track_matrix = add_column_to_2d_array(track_matrix, instr_type)
 
-
-
-        #FIX, instrument type *can* change mid-track
-
-
-
         track_matrix = track_matrix[(track_matrix[:, -1] == track_matrix[:, 6]) | (track_matrix[:, 6] == -1)]
         #print(track_matrix)
         #print(track_matrix.shape)
@@ -103,13 +96,6 @@ def MIDI_data_extractor(midi_file_path):
 
     matrix = matrix[np.lexsort((-matrix[:, 13], -matrix[:, 12], -matrix[:, 11], -matrix[:, 8], -matrix[:, 6] ))]
 
-
-
-    #FIX: not fully sorted by time
-
-
-
-
     #matrix = np.delete(matrix, -3, axis=1)
     print(matrix[0:100])
     '''[note_one_note, note_one_velocity * 2 for note_off,
@@ -119,5 +105,3 @@ def MIDI_data_extractor(midi_file_path):
         key_sig(turn into numbers), instrument_number, instrument_type]'''
 
     return matrix
-
-MIDI_data_extractor(r"C:\Users\ilove\Downloads\VI._Am_Wasserfall.mid")
