@@ -16,14 +16,14 @@ def MIDI_data_extractor(midi_file_path):
     matrix = np.array([], dtype=np.int16)
     used_instruments = np.zeros(128)
     midi_data = pretty_midi.PrettyMIDI(midi_file_path)
-    print(midi_data.instruments)
+    #print(midi_data.instruments)
     for i, track in enumerate(midi_file.tracks):
         #print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
         instr_type = 0
         if used_instruments[0] % 2 == 1:
             instr_type = 0
-        print(track)
+        #print(track)
         for msg in track:
             msg_array = np.full(15, -1)
             msg_array[-1] = msg.time
@@ -97,7 +97,7 @@ def MIDI_data_extractor(midi_file_path):
     matrix = matrix[np.lexsort((-matrix[:, 13], -matrix[:, 12], -matrix[:, 11], -matrix[:, 8], -matrix[:, 6] ))]
 
     #matrix = np.delete(matrix, -3, axis=1)
-    print(matrix[0:100])
+    #print(matrix[0:100])
     '''[note_one_note, note_one_velocity * 2 for note_off,
         control_change_control, control_change_value, program_change_program,
         end_of_track, set_tempo_tempo,
