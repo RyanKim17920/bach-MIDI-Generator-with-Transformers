@@ -25,7 +25,7 @@ def index_based_matrix_appender(matrix1, matrix2):
 
 #Test data:
 
-matrix3 = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16],[14, 14, 15, 16],[16, 14, 15, 16]])
-matrix4 = np.array([[1, 100], [2, 200], [3, 300]])
+#matrix3 = np.array([[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16],[14, 14, 15, 16],[16, 14, 15, 16]])
+#matrix4 = np.array([[1, 100], [2, 200], [3, 300]])
 
-print(index_based_matrix_appender(matrix3, matrix4))
+#print(index_based_matrix_appender(matrix3, matrix4))

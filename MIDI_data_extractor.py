@@ -14,10 +14,12 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
         track_matrix = np.array([], dtype=np.int16)
         program_matrix = np.array([], dtype=np.int64)
         msg_counter = 0
+        cur_time = 0
         for msg in track:
             msg_counter += 1
             msg_array = np.full(15, -1)
-            msg_array[-1] = msg.time
+            cur_time += msg.time
+            msg_array[-1] = cur_time
             if msg.type == 'note_on':
                 msg_array[0:2] = msg.note, msg.velocity
             elif msg.type == 'note_off':
@@ -62,8 +64,7 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
             matrix = matrix.reshape((-1, 17))
     matrix = matrix.reshape((-1, 17))
     matrix = matrix.astype(np.int64)
-    matrix = matrix[
-        np.lexsort((-matrix[:, 4], -matrix[:, 13], -matrix[:, 9], -matrix[:, 8], -matrix[:, 6], matrix[:, -3]))]
+    matrix = matrix[np.lexsort((-matrix[:, 4], -matrix[:, 13], -matrix[:, 9], -matrix[:, 8], -matrix[:, 6], matrix[:, -3]))]
     # order from first to last: Time, Program_change(Instrument), Tempo, time_sig, key_sig, control_change
 
     if not time_inc:
@@ -77,4 +78,4 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
 
     return matrix
 
-#MIDI_data_extractor(r"../test_midi_3.mid")
+MIDI_data_extractor(r"C:\Users\ilove\Downloads\Metamorphosen_TrV_290__Richard_Strauss_Metamorphosen_1.13_MS4.01.mid")
