@@ -1,27 +1,17 @@
 from mido import MidiFile
 import numpy as np
-# import pretty_midi
 from index_based_matrix_appender import index_based_matrix_appender
 from add_column_to_2d_array import add_column_to_2d_array
 
-
-def MIDI_data_extractor(midi_file_path):
+def MIDI_data_extractor(midi_file_path, time_inc=True):
     np.set_printoptions(threshold=np.inf)
     np.set_printoptions(linewidth=np.inf)
-
     midi_file = MidiFile(midi_file_path)
     matrix = np.array([], dtype=np.int16)
-    empty_matrixes = np.array([])
     used_instruments = np.zeros(128)
-    # midi_data = pretty_midi.PrettyMIDI(midi_file_path)
-    # print(midi_data.instruments)
     for i, track in enumerate(midi_file.tracks):
         # print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
-        instr_type = 0
-        if used_instruments[0] % 2 == 1:
-            instr_type = 0
-        # print(track)
         program_matrix = np.array([], dtype=np.int64)
         msg_counter = 0
         for msg in track:
@@ -63,39 +53,21 @@ def MIDI_data_extractor(midi_file_path):
             if not np.all(msg_array[0:-1] == -1):
                 track_matrix = np.append(track_matrix, [msg_array])
         if (len(program_matrix) > 0):
-            # print(program_matrix[0][1])
             used_instruments[int(program_matrix[0][1])] += 1
             instr_num = used_instruments[int(program_matrix[0][1])]
             track_matrix = track_matrix.reshape((-1, 15))
-            # print(track_matrix.shape)
-            # print(track.name)
-            # print(program_matrix)
-            # print(track_matrix.shape)
-            # print(program_matrix)
             track_matrix = index_based_matrix_appender(track_matrix, program_matrix)
-            # print(track_matrix.shape)
             track_matrix = add_column_to_2d_array(track_matrix, instr_num)
-
-            # track_matrix = track_matrix[(track_matrix[:, -1] == track_matrix[:, 6]) | (track_matrix[:, 6] == -1)]
-
             matrix = np.append(matrix, track_matrix)
             matrix = matrix.reshape((-1, 17))
-            # print(matrix)
     matrix = matrix.reshape((-1, 17))
     matrix = matrix.astype(np.int64)
-
-    # matrix_non_zero_7th = matrix[matrix[:, 6] != -1]
-    # matrix_zero_7th = matrix[matrix[:, 6] == -1]
-
-    # matrix_zero_7th = matrix_zero_7th[matrix_zero_7th[:, -3].argsort()]
-
-    # matrix = np.concatenate((matrix_non_zero_7th, matrix_zero_7th), axis=0)
-
     matrix = matrix[
         np.lexsort((-matrix[:, 4], -matrix[:, 13], -matrix[:, 9], -matrix[:, 8], -matrix[:, 6], matrix[:, -3]))]
     # order from first to last: Time, Program_change(Instrument), Tempo, time_sig, key_sig, control_change
-    # print(matrix)
-    # matrix = np.delete(matrix, -3, axis=1)
+
+    if not time_inc:
+        matrix = np.delete(matrix, -3, axis=1)
     print(matrix)
     '''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
         control_change_control, control_change_value, program_change_program,
@@ -105,6 +77,4 @@ def MIDI_data_extractor(midi_file_path):
 
     return matrix
 
-
-MIDI_data_extractor('bach/partitas/all2.mid')
-# this MIDI is very corrupted
+#MIDI_data_extractor(r"../test_midi_3.mid")
