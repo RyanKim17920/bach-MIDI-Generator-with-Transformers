@@ -15,6 +15,7 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
         program_matrix = np.array([], dtype=np.int64)
         msg_counter = 0
         cur_time = 0
+        orig_instr = -1
         for msg in track:
             msg_counter += 1
             msg_array = np.full(15, -1)
@@ -30,18 +31,20 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
                 msg_array[6] = msg.program
                 program_matrix = np.append(program_matrix, [[msg_counter], [msg.program]])
                 program_matrix = np.reshape(program_matrix, (-1, 2))
+                if orig_instr == -1:
+                    orig_instr = msg.program
             elif msg.type == 'end_of_track':
-                eot_array = np.full(17, -1)
+                eot_array = np.full(18, -1)
                 eot_array[-3] = msg.time
                 eot_array[7] = 1
                 matrix = np.append(matrix, [eot_array])
             elif msg.type == 'set_tempo':
-                st_array = np.full(17, -1)
+                st_array = np.full(18, -1)
                 st_array[-3] = msg.time
                 st_array[8] = msg.tempo
                 matrix = np.append(matrix, [st_array])
             elif msg.type == 'time_signature':
-                ts_array = np.full(17, -1)
+                ts_array = np.full(18, -1)
                 ts_array[-3] = msg.time
                 ts_array[9:13] = msg.numerator, msg.denominator, msg.clocks_per_click, msg.notated_32nd_notes_per_beat
                 matrix = np.append(matrix, [ts_array])
@@ -58,24 +61,30 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
             used_instruments[int(program_matrix[0][1])] += 1
             instr_num = used_instruments[int(program_matrix[0][1])]
             track_matrix = track_matrix.reshape((-1, 15))
+            print(track_matrix)
             track_matrix = index_based_matrix_appender(track_matrix, program_matrix)
             track_matrix = add_column_to_2d_array(track_matrix, instr_num)
+            print(track_matrix)
+            print(orig_instr)
+            track_matrix = add_column_to_2d_array(track_matrix, orig_instr)
+            print(track_matrix)
             matrix = np.append(matrix, track_matrix)
-            matrix = matrix.reshape((-1, 17))
-    matrix = matrix.reshape((-1, 17))
+            print(matrix)
+            matrix = matrix.reshape((-1, 18))
+    matrix = matrix.reshape((-1, 18))
     matrix = matrix.astype(np.int64)
-    matrix = matrix[np.lexsort((-matrix[:, 4], -matrix[:, 13], -matrix[:, 9], -matrix[:, 8], -matrix[:, 6], matrix[:, -3]))]
+    matrix = matrix[np.lexsort((-matrix[:, 4], -matrix[:, 13], -matrix[:, 9], -matrix[:, 8], -matrix[:, 6], matrix[:, -4]))]
     # order from first to last: Time, Program_change(Instrument), Tempo, time_sig, key_sig, control_change
 
     if not time_inc:
-        matrix = np.delete(matrix, -3, axis=1)
+        matrix = np.delete(matrix, -4, axis=1)
     print(matrix)
     '''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
         control_change_control, control_change_value, program_change_program,
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
-        key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type]'''
+        key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
 
     return matrix
 
-MIDI_data_extractor(r"C:\Users\ilove\Downloads\Metamorphosen_TrV_290__Richard_Strauss_Metamorphosen_1.13_MS4.01.mid")
+MIDI_data_extractor(r"../test_midi_2.mid")
