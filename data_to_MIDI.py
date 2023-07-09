@@ -1,19 +1,22 @@
 from mido import MidiFile, MidiTrack, Message, MetaMessage
 from MIDI_data_extractor import MIDI_data_extractor
-
+from tqdm import tqdm
 
 
 def MIDI_data_creator(matrix, midi_file_path):
     midi_file = MidiFile()
     tracks = {}
-    cur_time = 0
+    t_time = 0
+    print(matrix)
     '''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
         control_change_control, control_change_value, program_change_program,
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
-    for i in range(len(matrix)):
+    for i in tqdm(range(len(matrix))):
         cur_name = f"o{matrix[i][-1]}i{matrix[i][-3]}"
+        time = matrix[i][14] - t_time
+        t_time = matrix[i][14]
         print(matrix[i])
         if cur_name == f"o-1i-1":
             cur_name = list(tracks.keys())[0]
@@ -25,10 +28,9 @@ def MIDI_data_creator(matrix, midi_file_path):
                                                 notated_32nd_notes_per_beat=matrix[i][12], time=time))
         elif cur_name not in tracks:
             tracks[cur_name] = MidiTrack()
-            tracks[cur_name].append(Message('program_change', program=matrix[i][-1], time=0))
+            tracks[cur_name].append(Message('program_change', program=matrix[i][-1], time=time))
         else:
-            time = matrix[i][14] - cur_time
-            cur_time = matrix[i][14]
+
             if matrix[i][0] != -1:
                 tracks[cur_name].append(Message('note_on', note=matrix[i][0], velocity=matrix[i][1], time=time))
             if matrix[i][2] != -1:
@@ -50,4 +52,4 @@ def MIDI_data_creator(matrix, midi_file_path):
     midi_file.save(midi_file_path)
 
 
-MIDI_data_creator(MIDI_data_extractor(r"../test_midi_2.mid"), r"../test_midi_2.mid")
+MIDI_data_creator(MIDI_data_extractor(r"Canon_in_D.mid"), r"datma.mid")
