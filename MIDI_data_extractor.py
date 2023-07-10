@@ -9,13 +9,25 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
     midi_file = MidiFile(midi_file_path)
     matrix = np.array([], dtype=np.int16)
     used_instruments = np.zeros(128)
+    track_rp = -1
     for i, track in tqdm(enumerate(midi_file.tracks)):
-        # print('Track {}: {}'.format(i, track.name))
+        print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
         program_matrix = np.array([], dtype=np.int64)
         msg_counter = 0
         cur_time = 0
         orig_instr = -1
+        if track_rp != -1:
+            program_matrix = np.append(program_matrix, [[0], [track_rp]])
+            program_matrix = np.reshape(program_matrix, (-1, 2))
+            msg_array = np.full(15, -1)
+            msg_array[-1] = 0
+            msg_array[6] = track_rp
+            track_matrix = np.append(track_matrix, [msg_array])
+            orig_instr = track_rp
+            track_rp = -1
+            #print(program_matrix)
+
         for msg in track:
             msg_counter += 1
             msg_array = np.full(15, -1)
@@ -29,10 +41,13 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
                 msg_array[4:6] = msg.control, msg.value
             elif msg.type == 'program_change':
                 msg_array[6] = msg.program
+                #print(msg.program)
                 program_matrix = np.append(program_matrix, [[msg_counter], [msg.program]])
                 program_matrix = np.reshape(program_matrix, (-1, 2))
                 if orig_instr == -1:
                     orig_instr = msg.program
+                if msg.program <= 8 and track_rp == -1:
+                    track_rp = msg.program
             elif msg.type == 'end_of_track':
                 eot_array = np.full(18, -1)
                 eot_array[-4] = msg.time
@@ -57,15 +72,21 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
 
             if not np.all(msg_array[0:-1] == -1):
                 track_matrix = np.append(track_matrix, [msg_array])
+        track_matrix = track_matrix.astype(np.int64)
         if (len(program_matrix) > 0):
             used_instruments[int(program_matrix[0][1])] += 1
             instr_num = used_instruments[int(program_matrix[0][1])]
+            #print(instr_num)
             track_matrix = track_matrix.reshape((-1, 15))
             track_matrix = index_based_matrix_appender(track_matrix, program_matrix)
             track_matrix = add_column_to_2d_array(track_matrix, instr_num)
             track_matrix = add_column_to_2d_array(track_matrix, orig_instr)
             matrix = np.append(matrix, track_matrix)
             matrix = matrix.reshape((-1, 18))
+            track_matrix = track_matrix.astype(np.int64)
+        #print(track_matrix[0:100])
+    matrix = matrix.reshape((-1, 18))
+    matrix = np.unique(matrix, axis=0)
     matrix = matrix.reshape((-1, 18))
     matrix = matrix.astype(np.int64)
     matrix = matrix[np.lexsort((-matrix[:, 4], -matrix[:, 13], -matrix[:, 9], -matrix[:, 8], -matrix[:, 6], matrix[:, -4]))]
@@ -78,7 +99,6 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
-
     return matrix
 
-MIDI_data_extractor(r"../test_midi_2.mid")
+print(MIDI_data_extractor(r""))

@@ -1,3 +1,4 @@
+import numpy as np
 from mido import MidiFile, MidiTrack, Message, MetaMessage
 from MIDI_data_extractor import MIDI_data_extractor
 from tqdm import tqdm
@@ -7,17 +8,17 @@ def MIDI_data_creator(matrix, midi_file_path):
     midi_file = MidiFile()
     tracks = {}
     t_time = 0
-    print(matrix)
+    #print(matrix)
     '''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
         control_change_control, control_change_value, program_change_program,
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
     for i in tqdm(range(len(matrix))):
-        cur_name = f"o{matrix[i][-1]}i{matrix[i][-3]}"
+        cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
         time = matrix[i][14] - t_time
         t_time = matrix[i][14]
-        print(matrix[i])
+        #print(matrix[i])
         if cur_name == f"o-1i-1":
             cur_name = list(tracks.keys())[0]
             if matrix[i][8] != -1:
@@ -51,5 +52,10 @@ def MIDI_data_creator(matrix, midi_file_path):
         midi_file.tracks.append(tracks[track])
     midi_file.save(midi_file_path)
 
-
-MIDI_data_creator(MIDI_data_extractor(r"Canon_in_D.mid"), r"datma.mid")
+input_file_path = r""
+output_file_path = r""
+data_0 = MIDI_data_extractor(input_file_path)
+MIDI_data_creator(data_0, output_file_path)
+data_1 = MIDI_data_extractor(output_file_path)
+print(len(data_0))
+print(len(data_1))
