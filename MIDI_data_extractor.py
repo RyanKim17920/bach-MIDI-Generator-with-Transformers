@@ -89,8 +89,50 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
     matrix = np.unique(matrix, axis=0)
     matrix = matrix.reshape((-1, 18))
     matrix = matrix.astype(np.int64)
-    matrix = matrix[np.lexsort((-matrix[:, 4], -matrix[:, 13], -matrix[:, 9], -matrix[:, 8], -matrix[:, 6], matrix[:, -4]))]
-    # order from first to last: Time, Program_change(Instrument), Tempo, time_sig, key_sig, control_change
+    #deprecated order: from first to last: Time, Program_change(Instrument), Tempo, time_sig, key_sig, control_change
+
+    cols_to_sort = [6, 8, 9, 13, 4]
+
+    # Initialize an empty list to hold the new rows
+    new_rows = []
+
+    # Iterate over each row in your matrix
+    for row in matrix:
+        # Create a flag to check if a new row has been added
+        new_row_added = False
+        # Iterate over the columns you want to split
+        for col in cols_to_sort:
+            # Create a new row that is a copy of the original row
+            new_row = row.copy()
+            # Check if the value in the column is not -1
+            if new_row[col] != -1:
+                # Set all other columns in cols_to_sort to -1
+                new_row[[i for i in cols_to_sort if i != col]] = -1
+                # Append the new row to the list of new rows
+                new_rows.append(new_row)
+                # Set the flag to True
+                new_row_added = True
+        # If no new row was added, append the original row
+        if not new_row_added:
+            new_rows.append(row)
+
+    # Use numpy.vstack to stack the list of new rows into a new matrix
+    matrix = np.vstack(new_rows)
+
+    # Now sort by column 14 (time) in ascending order
+    index_time = np.argsort(matrix[:, 14], kind='stable')
+    matrix = matrix[index_time]
+
+    # Then sort by column 6 (value 6) - put all -1 at the end
+    index_value_6 = np.argsort(matrix[:, 6] == -1, kind='stable')
+    matrix = matrix[index_value_6]
+
+
+
+
+
+
+
 
     if not time_inc:
         matrix = np.delete(matrix, -4, axis=1)
@@ -99,6 +141,7 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
+
     return matrix
 
-print(MIDI_data_extractor(r""))
+print(MIDI_data_extractor(r"C:\Users\ilove\Downloads\Passacaglia_-_The_Impossible_Duet.mid"))
