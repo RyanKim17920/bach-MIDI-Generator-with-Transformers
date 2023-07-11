@@ -7,7 +7,7 @@ from tqdm import tqdm
 def MIDI_data_creator(matrix, midi_file_path):
     midi_file = MidiFile()
     tracks = {}
-    t_time = 0
+    tracks_t_time = {}
     #print(matrix)
     '''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
         control_change_control, control_change_value, program_change_program,
@@ -16,11 +16,11 @@ def MIDI_data_creator(matrix, midi_file_path):
         key_sig(turn into numbers), [time (only shown during tests)], instrument_type, instrument_num, orig_instrument_number]'''
     for i in tqdm(range(len(matrix))):
         cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
-        time = matrix[i][14] - t_time
-        t_time = matrix[i][14]
         #print(matrix[i])
         if cur_name == f"o-1i-1":
             cur_name = list(tracks.keys())[0]
+            time = matrix[i][14] - tracks_t_time[cur_name]
+            tracks_t_time[cur_name] = matrix[i][14]
             if matrix[i][8] != -1:
                 tracks[cur_name].append(MetaMessage('set_tempo', tempo=matrix[i][8], time=time))
             if matrix[i][9] != -1:
@@ -28,9 +28,14 @@ def MIDI_data_creator(matrix, midi_file_path):
                                                 clocks_per_click=matrix[i][11],
                                                 notated_32nd_notes_per_beat=matrix[i][12], time=time))
         elif cur_name not in tracks:
+            tracks_t_time[cur_name] = 0
+            time = 0
             tracks[cur_name] = MidiTrack()
             tracks[cur_name].append(Message('program_change', program=matrix[i][-1], time=time))
+
         else:
+            time = matrix[i][14] - tracks_t_time[cur_name]
+            tracks_t_time[cur_name] = matrix[i][14]
             if matrix[i][0] != -1:
                 tracks[cur_name].append(Message('note_on', note=matrix[i][0], velocity=matrix[i][1], time=time))
             if matrix[i][2] != -1:
@@ -49,12 +54,12 @@ def MIDI_data_creator(matrix, midi_file_path):
                 tracks[cur_name].append(MetaMessage('key_signature', key=key_sig_dict[matrix[i][13]], time=time))
     for track in tracks:
         midi_file.tracks.append(tracks[track])
-    print(tracks)
+    print(midi_file)
     #print(tracks.keys())
     midi_file.save(midi_file_path)
 
-input_file_path = r"test_3333.mid"
-output_file_path = r"test_3333_2.mid"
+input_file_path = r"C:\Users\ilove\Downloads\sample.mid"
+output_file_path = r"pure.mid"
 data_0 = MIDI_data_extractor(input_file_path)
 MIDI_data_creator(data_0, output_file_path)
 #data_1 = MIDI_data_extractor(output_file_path)

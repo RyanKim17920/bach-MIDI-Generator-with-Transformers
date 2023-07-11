@@ -141,4 +141,4 @@ def MIDI_data_extractor(midi_file_path, time_inc=True, print_ = False):
 
     return matrix
 
-MIDI_data_extractor(r"C:\Users\ilove\Downloads\Passacaglia_-_The_Impossible_Duet.mid", True, True)
+#MIDI_data_extractor(r"C:\Users\ilove\Downloads\Passacaglia_-_The_Impossible_Duet.mid", True, True)
