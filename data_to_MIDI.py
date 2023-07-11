@@ -13,7 +13,7 @@ def MIDI_data_creator(matrix, midi_file_path):
         control_change_control, control_change_value, program_change_program,
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
-        key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
+        key_sig(turn into numbers), [time (only shown during tests)], instrument_type, instrument_num, orig_instrument_number]'''
     for i in tqdm(range(len(matrix))):
         cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
         time = matrix[i][14] - t_time
@@ -31,7 +31,6 @@ def MIDI_data_creator(matrix, midi_file_path):
             tracks[cur_name] = MidiTrack()
             tracks[cur_name].append(Message('program_change', program=matrix[i][-1], time=time))
         else:
-
             if matrix[i][0] != -1:
                 tracks[cur_name].append(Message('note_on', note=matrix[i][0], velocity=matrix[i][1], time=time))
             if matrix[i][2] != -1:
@@ -50,12 +49,14 @@ def MIDI_data_creator(matrix, midi_file_path):
                 tracks[cur_name].append(MetaMessage('key_signature', key=key_sig_dict[matrix[i][13]], time=time))
     for track in tracks:
         midi_file.tracks.append(tracks[track])
+    print(tracks)
+    #print(tracks.keys())
     midi_file.save(midi_file_path)
 
-input_file_path = r""
-output_file_path = r""
+input_file_path = r"test_3333.mid"
+output_file_path = r"test_3333_2.mid"
 data_0 = MIDI_data_extractor(input_file_path)
 MIDI_data_creator(data_0, output_file_path)
-data_1 = MIDI_data_extractor(output_file_path)
-print(len(data_0))
-print(len(data_1))
+#data_1 = MIDI_data_extractor(output_file_path)
+#print(len(data_0))
+#print(len(data_1))

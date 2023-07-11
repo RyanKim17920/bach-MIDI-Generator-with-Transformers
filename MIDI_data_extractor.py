@@ -3,13 +3,14 @@ import numpy as np
 from index_based_matrix_appender import index_based_matrix_appender
 from add_column_to_2d_array import add_column_to_2d_array
 from tqdm import tqdm
-def MIDI_data_extractor(midi_file_path, time_inc=True):
+def MIDI_data_extractor(midi_file_path, time_inc=True, print_ = False):
     np.set_printoptions(threshold=np.inf)
     np.set_printoptions(linewidth=np.inf)
     midi_file = MidiFile(midi_file_path)
     matrix = np.array([], dtype=np.int16)
     used_instruments = np.zeros(128)
     track_rp = -1
+    print(midi_file.ticks_per_beat)
     for i, track in tqdm(enumerate(midi_file.tracks)):
         print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
@@ -127,12 +128,8 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
     index_value_6 = np.argsort(matrix[:, 6] == -1, kind='stable')
     matrix = matrix[index_value_6]
 
-
-
-
-
-
-
+    if print_:
+        print(matrix)
 
     if not time_inc:
         matrix = np.delete(matrix, -4, axis=1)
@@ -140,8 +137,8 @@ def MIDI_data_extractor(midi_file_path, time_inc=True):
         control_change_control, control_change_value, program_change_program,
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
-        key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
+        key_sig(turn into numbers), [time (only shown during tests)], instrument_type, instrument_num, orig_instrument_number]'''
 
     return matrix
 
-print(MIDI_data_extractor(r"C:\Users\ilove\Downloads\Passacaglia_-_The_Impossible_Duet.mid"))
+MIDI_data_extractor(r"C:\Users\ilove\Downloads\Passacaglia_-_The_Impossible_Duet.mid", True, True)
