@@ -8,4 +8,6 @@ As this project is currently unfinished, the repository will be a highly changin
 If you have any solutions to issues that occur within the code, please request a merge request.
 Thanks! 
 
-The MIDI files were extracted from: https://www.bachcentral.com/midiindexcomplete.html.
+The MIDI files were extracted from: http://www.jsbach.net/midi/.
+
+#### Current workings: Transformer model and final Data Preparation!

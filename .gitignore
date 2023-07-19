@@ -22,4 +22,5 @@ env.bak/
 venv.bak/
 
 node_modules
-*.mid
+
+.idea/
