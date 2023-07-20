@@ -56,5 +56,3 @@ def MIDI_merger(input, output):
     # print(tracks.keys())
     midi_file.save(output)
 
-
-MIDI_merger(r'vp2-5cha.mid', r'chaconne.mid')
