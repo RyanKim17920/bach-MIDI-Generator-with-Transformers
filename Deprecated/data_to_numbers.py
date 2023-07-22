@@ -20,6 +20,8 @@ from tqdm import tqdm
 # key_sig = 30
 # time = 3000 (use relative time)
 # instrument_type = 129, instrument_num = 5, orig_instrument_number = 129 = 5 * 129^2
+# [129,129,129,129,129,2,200,32,32,128,64,30,3000,129,5,129]
+# 2, 2, 1, 1, 1, 4, 1
 def relative_time(matrix):
     tracks_t_time = {}
     for i in tqdm(range(len(matrix))):
@@ -44,6 +46,14 @@ def relative_time(matrix):
     data[:, -4] = diff
     return data'''
     return matrix
+
+print(np.max(relative_time(MIDI_data_extractor(r"C:\Users\ilove\Downloads\bwv988.mid"))[:,-4]))
+
+
+
+
+'''
+
 
 max_values = np.array([130, 130, 0, 0, 130, 130, 130, 3, 16777218, 258, 258, 258, 258, 32, 1002, 131, 19, 131])
 
@@ -81,7 +91,6 @@ def convert_numbers_to_matrix(numbers, max_values):
 
 
 
-matrx = relative_time(MIDI_data_extractor(r"C:\Users\ilove\Downloads\Passacaglia_-_The_Impossible_Duet.mid"))
+
 numbers_matrix = convert_matrix_to_number(matrx, max_values)
-matrx_2 = convert_numbers_to_matrix(numbers_matrix, max_values)
-print(matrx_2)
+'''

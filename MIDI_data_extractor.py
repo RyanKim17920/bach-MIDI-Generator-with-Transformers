@@ -5,7 +5,7 @@ from add_column_to_2d_array import add_column_to_2d_array
 from tqdm import tqdm
 
 
-def MIDI_data_extractor(midi_file_path):
+def MIDI_data_extractor(midi_file_path, verbose=0):
     np.set_printoptions(threshold=np.inf)
     np.set_printoptions(linewidth=np.inf)
     midi_file = MidiFile(midi_file_path)
@@ -13,7 +13,8 @@ def MIDI_data_extractor(midi_file_path):
     used_instruments = np.zeros(128)
     track_rp = -1
     for i, track in tqdm(enumerate(midi_file.tracks)):
-        print('Track {}: {}'.format(i, track.name))
+        if verbose == 2:
+            print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
         program_matrix = np.array([], dtype=np.int64)
         msg_counter = 0
@@ -39,8 +40,8 @@ def MIDI_data_extractor(midi_file_path):
                 msg_array[0:2] = msg.note, msg.velocity
             elif msg.type == 'note_off':
                 msg_array[0:2] = msg.note, 0
-                #note_off is unnecessary and should be removed
-            #deleted 2-4 hmm
+                # note_off is unnecessary and should be removed
+            # deleted 2-4 hmm
             elif msg.type == 'control_change':
                 msg_array[2:4] = msg.control, msg.value
             elif msg.type == 'program_change':
@@ -55,7 +56,7 @@ def MIDI_data_extractor(midi_file_path):
             elif msg.type == 'end_of_track':
                 eot_array = np.full(16, -1)
                 eot_array[-4] = cur_time
-                eot_array[5] = 1
+                eot_array[5] = 0
                 matrix = np.append(matrix, [eot_array])
             elif msg.type == 'set_tempo':
                 st_array = np.full(16, -1)
@@ -143,5 +144,3 @@ def MIDI_data_extractor(midi_file_path):
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
     return matrix
-
-#print(MIDI_data_extractor(r"test.mid"))
