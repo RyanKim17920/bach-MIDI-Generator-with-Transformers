@@ -12,6 +12,7 @@ def MIDI_data_extractor(midi_file_path, verbose=0):
     matrix = np.array([], dtype=np.int16)
     used_instruments = np.zeros(128)
     track_rp = -1
+    organ_count = 0
     for i, track in tqdm(enumerate(midi_file.tracks)):
         if verbose == 2:
             print('Track {}: {}'.format(i, track.name))
@@ -28,7 +29,12 @@ def MIDI_data_extractor(midi_file_path, verbose=0):
             msg_array[4] = track_rp
             track_matrix = np.append(track_matrix, [msg_array])
             orig_instr = track_rp
-            track_rp = -1
+            if track_rp <= 8:
+                track_rp = -1
+            elif 17 <= track_rp <= 24:
+                organ_count -= 1
+                if organ_count == 0:
+                    track_rp = -1
         for msg in track:
             msg_counter += 1
             msg_array = np.full(13, -1)
@@ -52,6 +58,9 @@ def MIDI_data_extractor(midi_file_path, verbose=0):
                 if orig_instr == -1:
                     orig_instr = msg.program
                 if msg.program <= 8 and track_rp == -1:
+                    track_rp = msg.program
+                if msg.program >= 17 and msg.program <= 24:
+                    organ_count += 2
                     track_rp = msg.program
             elif msg.type == 'end_of_track':
                 eot_array = np.full(16, -1)
