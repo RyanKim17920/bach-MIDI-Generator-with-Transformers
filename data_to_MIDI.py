@@ -1,9 +1,10 @@
 from mido import MidiFile, MidiTrack, Message, MetaMessage, bpm2tempo
 from MIDI_data_extractor import MIDI_data_extractor
 from tqdm import tqdm
+import numpy as np
 
 
-def MIDI_data_creator(matrix, midi_file_path):
+def data_to_MIDI(matrix, midi_file_path, relative_time = False):
     midi_file = MidiFile()
     tracks = {}
     tracks_t_time = {}
@@ -18,8 +19,11 @@ def MIDI_data_creator(matrix, midi_file_path):
         # print(matrix[i])
         if cur_name == f"o-1i-1":
             cur_name = list(tracks.keys())[0]
-            time = matrix[i][-4] - tracks_t_time[cur_name]
-            tracks_t_time[cur_name] = matrix[i][-4]
+            if not relative_time:
+                time = matrix[i][-4] - tracks_t_time[cur_name]
+                tracks_t_time[cur_name] = matrix[i][-4]
+            else:
+                time = matrix[i][-4]
             if matrix[i][6] != -1:
                 tracks[cur_name].append(MetaMessage('set_tempo', tempo=bpm2tempo(20 + matrix[i][6]), time=time))
             if matrix[i][7] != -1:
@@ -33,8 +37,11 @@ def MIDI_data_creator(matrix, midi_file_path):
             tracks[cur_name].append(Message('program_change', program=matrix[i][-1], time=time))
 
         else:
-            time = matrix[i][-4] - tracks_t_time[cur_name]
-            tracks_t_time[cur_name] = matrix[i][-4]
+            if not relative_time:
+                time = matrix[i][-4] - tracks_t_time[cur_name]
+                tracks_t_time[cur_name] = matrix[i][-4]
+            else:
+                time = matrix[i][-4]
             if matrix[i][0] != -1:
                 tracks[cur_name].append(Message('note_on', note=matrix[i][0], velocity=matrix[i][1], time=time))
             if matrix[i][2] != -1:
@@ -56,7 +63,9 @@ def MIDI_data_creator(matrix, midi_file_path):
     midi_file.save(midi_file_path)
 
 
-input_file_path = r"C:\Users\ilove\Downloads\Metamorphosen_TrV_290__Richard_Strauss_Metamorphosen_1.13_MS4.01.mid"
-output_file_path = r"metaph.mid"
+input_file_path = r"Bach MIDIs\Organ Works\Preludes and Fugues for Organ\bwv539_1.mid"
+output_file_path = r"bwv539_1.mid"
 data_0 = MIDI_data_extractor(input_file_path)
-MIDI_data_creator(data_0, output_file_path)
+print(data_0)
+data_to_MIDI(data_0, output_file_path)
+print(MIDI_data_extractor(output_file_path))
