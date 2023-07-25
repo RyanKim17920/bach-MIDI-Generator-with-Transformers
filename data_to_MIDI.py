@@ -9,9 +9,9 @@ def data_to_MIDI(matrix, midi_file_path, relative_time = False):
     tracks = {}
     tracks_t_time = {}
     # print(matrix)
-    '''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
+    '''[note_on_note, note_on_velocity,
         control_change_control, control_change_value, program_change_program,
-        end_of_track, set_tempo_tempo,
+        end_marking, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
     for i in tqdm(range(len(matrix))):

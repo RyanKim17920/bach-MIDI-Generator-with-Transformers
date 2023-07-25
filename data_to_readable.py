@@ -150,12 +150,11 @@ key_sig_dict = {0: 'A', 1: 'A#m', 2: 'Ab', 3: 'Abm', 4: 'Am', 5: 'B', 6: 'Bb', 7
                                  9: 'C', 10: 'C#', 11: 'C#m', 12: 'Cb', 13: 'Cm', 14: 'D', 15: 'D#m', 16: 'Db',
                                  17: 'Dm', 18: 'E', 19: 'Eb', 20: 'Ebm', 21: 'Em', 22: 'F', 23: 'F#', 24: 'F#m',
                                  25: 'Fm', 26: 'G', 27: 'G#m', 28: 'Gb', 29: 'Gm'}
-'''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
-       control_change_control, control_change_value, program_change_program,
-       end_of_track, set_tempo_tempo,
-       time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
-       key_sig(turn into numbers), [time (only shown during tests)], instrument_number, instrument_type, orig_instrument_number]'''
-
+'''[note_on_note, note_on_velocity,
+        control_change_control, control_change_value, program_change_program,
+        end_marking, set_tempo_tempo,
+        time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
+        key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
 def matrix_to_readable_data(matrix):
     readable_data = []

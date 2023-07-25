@@ -170,9 +170,9 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
                 time = matrix[i][-4] - tracks_t_time[cur_name]
                 tracks_t_time[cur_name] = matrix[i][-4]
                 matrix[i][-4] = time
-    '''[note_on_note, note_on_velocity, 
+    '''[note_on_note, note_on_velocity,
         control_change_control, control_change_value, program_change_program,
-        end_of_track, set_tempo_tempo,
+        end_marking, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
