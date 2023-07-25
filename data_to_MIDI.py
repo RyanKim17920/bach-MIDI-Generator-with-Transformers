@@ -48,8 +48,8 @@ def data_to_MIDI(matrix, midi_file_path, relative_time = False):
                 tracks[cur_name].append(Message('control_change', control=matrix[i][2], value=matrix[i][3], time=time))
             if matrix[i][4] != -1:
                 tracks[cur_name].append(Message('program_change', program=matrix[i][4], time=time))
-            if matrix[i][5] != -1:
-                tracks[cur_name].append(MetaMessage('end_of_track', time=time))
+            #if matrix[i][5] != -1:
+                #tracks[cur_name].append(MetaMessage('end_of_track', time=time))
             if matrix[i][11] != -1:
                 key_sig_dict = {0: 'A', 1: 'A#m', 2: 'Ab', 3: 'Abm', 4: 'Am', 5: 'B', 6: 'Bb', 7: 'Bbm', 8: 'Bm',
                                 9: 'C', 10: 'C#', 11: 'C#m', 12: 'Cb', 13: 'Cm', 14: 'D', 15: 'D#m', 16: 'Db',
@@ -62,10 +62,11 @@ def data_to_MIDI(matrix, midi_file_path, relative_time = False):
     # print(tracks.keys())
     midi_file.save(midi_file_path)
 
-
+'''
 input_file_path = r"Bach MIDIs\Organ Works\Preludes and Fugues for Organ\bwv539_1.mid"
 output_file_path = r"bwv539_1.mid"
 data_0 = MIDI_data_extractor(input_file_path)
 print(data_0)
 data_to_MIDI(data_0, output_file_path)
 print(MIDI_data_extractor(output_file_path))
+'''

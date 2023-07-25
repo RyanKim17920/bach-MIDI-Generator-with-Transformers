@@ -5,7 +5,7 @@ from add_column_to_2d_array import add_column_to_2d_array
 from tqdm import tqdm
 
 
-def MIDI_data_extractor(midi_file_path, verbose=0, relative_time = False):
+def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
     np.set_printoptions(threshold=np.inf)
     np.set_printoptions(linewidth=np.inf)
     midi_file = MidiFile(midi_file_path)
@@ -13,7 +13,7 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time = False):
     used_instruments = np.zeros(128)
     track_rp = -1
     organ_count = 0
-    for i, track in tqdm(enumerate(midi_file.tracks)):
+    for i, track in (tqdm(enumerate(midi_file.tracks)) if verbose >= 1 else enumerate(midi_file.tracks)):
         if verbose == 2:
             print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
@@ -62,8 +62,8 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time = False):
                 if msg.program >= 17 and msg.program <= 24:
                     organ_count += 2
                     track_rp = msg.program
-            elif msg.type == 'end_of_track':
-                msg_array[5] = 0
+            # elif msg.type == 'end_of_track':
+            # msg_array[5] = 0
             elif msg.type == 'set_tempo':
                 st_array = np.full(16, -1)
                 st_array[-4] = cur_time
@@ -93,11 +93,10 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time = False):
             track_matrix = add_column_to_2d_array(track_matrix, orig_instr)
             matrix = np.append(matrix, track_matrix)
             matrix = matrix.reshape((-1, 16))
-            track_matrix = track_matrix.astype(np.int64)
         # print(track_matrix[0:100])
+
     matrix = matrix.reshape((-1, 16))
     matrix = np.unique(matrix, axis=0)
-    matrix = matrix.reshape((-1, 16))
     matrix = matrix.astype(np.int64)
     # deprecated order: from first to last: Time, Program_change(Instrument), Tempo, time_sig, key_sig, control_change
     cols_to_sort = [4, 6, 7, 11]
@@ -135,7 +134,7 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time = False):
     # Use numpy.vstack to stack the list of new rows into a new matrix
     matrix = np.vstack(new_rows)
 
-    #masking for the 5th index
+    # masking for the 5th index
     mask = matrix[:, 5] == -1
 
     matrix = np.concatenate((matrix[mask], matrix[~mask]))
@@ -147,32 +146,34 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time = False):
     index_value_4 = np.argsort(matrix[:, 4] == -1, kind='stable')
     matrix = matrix[index_value_4]
 
+    end_track = np.full(16, -1)
+    end_track[-4] = matrix[len(matrix) - 1][-4]
+    end_track[5] = 0
+    matrix = np.append(matrix, [end_track])
+    matrix = matrix.reshape((-1, 16))
 
     if relative_time:
         tracks_t_time = {}
         for i in tqdm(range(len(matrix))):
             cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
             if cur_name == f"o-1i-1":
-                cur_name = list(tracks_t_time.keys())[0]
+                try:
+                    cur_name = list(tracks_t_time.keys())[0]
+                except IndexError:
+                    print(matrix)
                 time = matrix[i][-4] - tracks_t_time[cur_name]
                 tracks_t_time[cur_name] = matrix[i][-4]
-                matrix[i][-4] = time
-            elif cur_name not in tracks_t_time:
-                tracks_t_time[cur_name] = 0
-                time = 0
                 matrix[i][-4] = time
             else:
+                if cur_name not in tracks_t_time:
+                    tracks_t_time[cur_name] = 0
                 time = matrix[i][-4] - tracks_t_time[cur_name]
                 tracks_t_time[cur_name] = matrix[i][-4]
                 matrix[i][-4] = time
-    '''[note_on_note, note_on_velocity, note_off_note, note_off_velocity,
+    '''[note_on_note, note_on_velocity, 
         control_change_control, control_change_value, program_change_program,
         end_of_track, set_tempo_tempo,
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
     return matrix
-
-input_file_path = r"Bach MIDIs\Organ Works\Preludes and Fugues for Organ\bwv539_1.mid"
-data_0 = MIDI_data_extractor(input_file_path)
-print(data_0)
