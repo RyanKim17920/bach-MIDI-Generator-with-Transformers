@@ -155,21 +155,20 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
     if relative_time:
         tracks_t_time = {}
         for i in tqdm(range(len(matrix))):
-            cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
-            if cur_name == f"o-1i-1":
-                try:
-                    cur_name = list(tracks_t_time.keys())[0]
-                except IndexError:
-                    print(matrix)
-                time = matrix[i][-4] - tracks_t_time[cur_name]
-                tracks_t_time[cur_name] = matrix[i][-4]
-                matrix[i][-4] = time
-            else:
-                if cur_name not in tracks_t_time:
-                    tracks_t_time[cur_name] = 0
-                time = matrix[i][-4] - tracks_t_time[cur_name]
-                tracks_t_time[cur_name] = matrix[i][-4]
-                matrix[i][-4] = time
+            try:
+                cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
+                if cur_name == f"o-1i-1":
+                    time = matrix[i][-4] - tracks_t_time[cur_name]
+                    tracks_t_time[cur_name] = matrix[i][-4]
+                    matrix[i][-4] = time
+                else:
+                    if cur_name not in tracks_t_time:
+                        tracks_t_time[cur_name] = 0
+                    time = matrix[i][-4] - tracks_t_time[cur_name]
+                    tracks_t_time[cur_name] = matrix[i][-4]
+                    matrix[i][-4] = time
+            except:
+                pass
     '''[note_on_note, note_on_velocity,
         control_change_control, control_change_value, program_change_program,
         end_marking, set_tempo_tempo,
