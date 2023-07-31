@@ -67,7 +67,7 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
             elif msg.type == 'set_tempo':
                 st_array = np.full(16, -1)
                 st_array[-4] = cur_time
-                st_array[6] = tempo2bpm(msg.tempo) - 20
+                st_array[6] = tempo2bpm(msg.tempo)
                 matrix = np.append(matrix, [st_array])
             elif msg.type == 'time_signature':
                 ts_array = np.full(16, -1)

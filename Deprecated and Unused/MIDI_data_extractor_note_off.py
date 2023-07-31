@@ -1,4 +1,4 @@
-from mido import MidiFile, tempo2bpm
+from mido import MidiFile
 import numpy as np
 from index_based_matrix_appender import index_based_matrix_appender
 from add_column_to_2d_array import add_column_to_2d_array

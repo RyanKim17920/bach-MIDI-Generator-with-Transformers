@@ -1,7 +1,5 @@
 from mido import MidiFile, MidiTrack, Message, MetaMessage, bpm2tempo
-from MIDI_data_extractor import MIDI_data_extractor
 from tqdm import tqdm
-import numpy as np
 
 
 def data_to_MIDI(matrix, midi_file_path, relative_time = False):
