@@ -13,7 +13,7 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
     used_instruments = np.zeros(128)
     track_rp = -1
     organ_count = 0
-    for i, track in (tqdm(enumerate(midi_file.tracks)) if verbose >= 1 else enumerate(midi_file.tracks)):
+    for i, track in tqdm(enumerate(midi_file.tracks), disable=False if verbose >= 1 else True):
         if verbose == 2:
             print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
@@ -146,18 +146,13 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
     index_value_4 = np.argsort(matrix[:, 4] == -1, kind='stable')
     matrix = matrix[index_value_4]
 
-    end_track = np.full(16, -1)
-    end_track[-4] = matrix[len(matrix) - 1][-4]
-    end_track[5] = 0
-    matrix = np.append(matrix, [end_track])
-    matrix = matrix.reshape((-1, 16))
-
     if relative_time:
         tracks_t_time = {}
-        for i in tqdm(range(len(matrix))):
+        for i in tqdm(range(len(matrix)), disable=False if verbose >= 1 else True):
             try:
                 cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
                 if cur_name == f"o-1i-1":
+                    cur_name = list(tracks_t_time.keys())[0]
                     time = matrix[i][-4] - tracks_t_time[cur_name]
                     tracks_t_time[cur_name] = matrix[i][-4]
                     matrix[i][-4] = time
@@ -169,6 +164,17 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
                     matrix[i][-4] = time
             except:
                 pass
+        end_track = np.full(16, -1)
+        end_track[-4] = 0
+        end_track[5] = 0
+        matrix = np.append(matrix, [end_track])
+        matrix = matrix.reshape((-1, 16))
+    else:
+        end_track = np.full(16, -1)
+        end_track[-4] = matrix[len(matrix) - 1][-4]
+        end_track[5] = 0
+        matrix = np.append(matrix, [end_track])
+        matrix = matrix.reshape((-1, 16))
     '''[note_on_note, note_on_velocity,
         control_change_control, control_change_value, program_change_program,
         end_marking, set_tempo_tempo,
