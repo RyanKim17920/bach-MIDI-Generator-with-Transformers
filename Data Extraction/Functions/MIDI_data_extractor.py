@@ -138,13 +138,16 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
     mask = matrix[:, 5] == -1
 
     matrix = np.concatenate((matrix[mask], matrix[~mask]))
-    # Now sort by column -4 (time) in ascending order
-    index_time = np.argsort(matrix[:, -4], kind='stable')
-    matrix = matrix[index_time]
 
     # Then sort by column 4 (value 4) - put all -1 at the end
     index_value_4 = np.argsort(matrix[:, 4] == -1, kind='stable')
     matrix = matrix[index_value_4]
+
+    # Now sort by column -4 (time) in ascending order
+    index_time = np.argsort(matrix[:, -4], kind='stable')
+    matrix = matrix[index_time]
+
+
 
     if relative_time:
         tracks_t_time = {}
