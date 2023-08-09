@@ -1,6 +1,6 @@
 from mido import MidiFile, MidiTrack, Message, MetaMessage, bpm2tempo
 from tqdm import tqdm
-
+from Data_Extraction.MIDI_data_extractor import MIDI_data_extractor
 
 def data_to_MIDI(matrix, midi_file_path, relative_time = False):
     midi_file = MidiFile()
@@ -23,7 +23,7 @@ def data_to_MIDI(matrix, midi_file_path, relative_time = False):
             else:
                 time = matrix[i][-4]
             if matrix[i][6] != -1:
-                tracks[cur_name].append(MetaMessage('set_tempo', tempo=bpm2tempo(20 + matrix[i][6]), time=time))
+                tracks[cur_name].append(MetaMessage('set_tempo', tempo=bpm2tempo(matrix[i][6]), time=time))
             if matrix[i][7] != -1:
                 tracks[cur_name].append(MetaMessage('time_signature', numerator=matrix[i][7], denominator=matrix[i][8],
                                                     clocks_per_click=matrix[i][9],
@@ -61,7 +61,7 @@ def data_to_MIDI(matrix, midi_file_path, relative_time = False):
     midi_file.save(midi_file_path)
 
 '''
-input_file_path = r"Bach MIDIs\Organ Works\Preludes and Fugues for Organ\bwv539_1.mid"
+input_file_path = r"\Bach MIDIs\Organ Works\St. Anne's Prelude and Fugue in Eb major - BWV 552\bwv552f.mid"
 output_file_path = r"bwv539_1.mid"
 data_0 = MIDI_data_extractor(input_file_path)
 print(data_0)

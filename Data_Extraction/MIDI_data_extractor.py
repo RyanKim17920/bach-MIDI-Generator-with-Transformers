@@ -1,11 +1,41 @@
 from mido import MidiFile, tempo2bpm
 import numpy as np
-from index_based_matrix_appender import index_based_matrix_appender
-from add_column_to_2d_array import add_column_to_2d_array
 from tqdm import tqdm
 
 
-def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
+# helper functions
+def index_based_matrix_appender(matrix1, matrix2):
+    new_matrix = np.full((matrix1.shape[0], matrix1.shape[1] + 1), 0)
+    new_matrix[:, :-1] = matrix1
+
+    for i, arr in enumerate(matrix2):
+        start_index = arr[0]
+        if i == 0:
+            start_index = 0
+        value = arr[1]
+
+        if i < len(matrix2) - 1:
+            end_index = matrix2[i + 1][0]
+        else:
+            end_index = len(matrix1)
+
+        new_matrix[start_index:end_index, -1] = value
+
+    return new_matrix
+
+
+def add_column_to_2d_array(array, number):
+    # Create a column with the same number of rows as the original array
+    column = np.full((array.shape[0], 1), number)
+    # Add the column to the array
+    return np.append(array, column, axis=1)
+
+
+def MIDI_data_extractor(midi_file_path,
+                        verbose=0,
+                        relative_time=False,
+                        include_start=True,
+                        include_end=True):
     np.set_printoptions(threshold=np.inf)
     np.set_printoptions(linewidth=np.inf)
     midi_file = MidiFile(midi_file_path)
@@ -147,8 +177,6 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
     index_time = np.argsort(matrix[:, -4], kind='stable')
     matrix = matrix[index_time]
 
-
-
     if relative_time:
         tracks_t_time = {}
         for i in tqdm(range(len(matrix)), disable=False if verbose >= 1 else True):
@@ -167,21 +195,35 @@ def MIDI_data_extractor(midi_file_path, verbose=0, relative_time=False):
                     matrix[i][-4] = time
             except:
                 pass
-        end_track = np.full(16, -1)
-        end_track[-4] = 0
-        end_track[5] = 0
-        matrix = np.append(matrix, [end_track])
-        matrix = matrix.reshape((-1, 16))
+        if include_end:
+            end_track = np.full(16, -1)
+            end_track[-4] = 0
+            end_track[5] = 1
+            matrix = np.append(matrix, [end_track])
+            matrix = matrix.reshape((-1, 16))
+        if include_start:
+            start_track = np.full(16, -1)
+            start_track[-4] = 0
+            start_track[5] = 0
+            matrix = np.append([start_track], matrix)
+            matrix = matrix.reshape((-1, 16))
     else:
-        end_track = np.full(16, -1)
-        end_track[-4] = matrix[len(matrix) - 1][-4]
-        end_track[5] = 0
-        matrix = np.append(matrix, [end_track])
-        matrix = matrix.reshape((-1, 16))
+        if include_end:
+            end_track = np.full(16, -1)
+            end_track[-4] = matrix[len(matrix) - 1][-4]
+            end_track[5] = 1
+            matrix = np.append(matrix, [end_track])
+            matrix = matrix.reshape((-1, 16))
+        if include_start:
+            start_track = np.full(16, -1)
+            start_track[-4] = 0
+            start_track[5] = 0
+            matrix = np.append([start_track], matrix)
+            matrix = matrix.reshape((-1, 16))
     '''[note_on_note, note_on_velocity,
         control_change_control, control_change_value, program_change_program,
-        end_marking, set_tempo_tempo,
-        time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
+        end/start_marking, set_tempo_tempo,
+        time_sig_num, time_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
     return matrix
