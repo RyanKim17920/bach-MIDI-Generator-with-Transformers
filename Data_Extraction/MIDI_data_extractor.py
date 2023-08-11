@@ -33,7 +33,7 @@ def add_column_to_2d_array(array, number):
 
 def MIDI_data_extractor(midi_file_path,
                         verbose=0,
-                        relative_time=False,
+                        relative_time=True,
                         include_start=True,
                         include_end=True):
     np.set_printoptions(threshold=np.inf)
@@ -227,3 +227,4 @@ def MIDI_data_extractor(midi_file_path,
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
     return matrix
+print(MIDI_data_extractor(r"C:\Users\ilove\CODING\PYStuff\MusicNet\Midi2Numpy\MIDI-Generator-with-Transformers\Bach MIDIs\18 Leipzig Chorale Preludes for Organ\bwv651.mid"))
