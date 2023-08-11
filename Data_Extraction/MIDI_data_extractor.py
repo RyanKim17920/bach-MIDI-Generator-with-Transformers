@@ -227,4 +227,3 @@ def MIDI_data_extractor(midi_file_path,
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
     return matrix
-print(MIDI_data_extractor(r"C:\Users\ilove\CODING\PYStuff\MusicNet\Midi2Numpy\MIDI-Generator-with-Transformers\Bach MIDIs\18 Leipzig Chorale Preludes for Organ\bwv651.mid"))
