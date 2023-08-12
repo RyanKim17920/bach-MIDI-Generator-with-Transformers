@@ -35,7 +35,8 @@ def MIDI_data_extractor(midi_file_path,
                         verbose=0,
                         relative_time=True,
                         include_start=True,
-                        include_end=True):
+                        include_end=True,
+                        include_instr_type=True):
     np.set_printoptions(threshold=np.inf)
     np.set_printoptions(linewidth=np.inf)
     midi_file = MidiFile(midi_file_path)
@@ -51,20 +52,6 @@ def MIDI_data_extractor(midi_file_path,
         msg_counter = 0
         cur_time = 0
         orig_instr = -1
-        if track_rp != -1:
-            program_matrix = np.append(program_matrix, [[0], [track_rp]])
-            program_matrix = np.reshape(program_matrix, (-1, 2))
-            msg_array = np.full(13, -1)
-            msg_array[-1] = 0
-            msg_array[4] = track_rp
-            track_matrix = np.append(track_matrix, [msg_array])
-            orig_instr = track_rp
-            if track_rp <= 8:
-                track_rp = -1
-            elif 17 <= track_rp <= 24:
-                organ_count -= 1
-                if organ_count == 0:
-                    track_rp = -1
         for msg in track:
             msg_counter += 1
             msg_array = np.full(13, -1)
@@ -89,7 +76,7 @@ def MIDI_data_extractor(midi_file_path,
                     orig_instr = msg.program
                 if msg.program <= 8 and track_rp == -1:
                     track_rp = msg.program
-                if msg.program >= 17 and msg.program <= 24:
+                if 17 <= msg.program <= 24:
                     organ_count += 2
                     track_rp = msg.program
             # elif msg.type == 'end_of_track':
@@ -114,20 +101,50 @@ def MIDI_data_extractor(midi_file_path,
                 track_matrix = np.append(track_matrix, [msg_array])
         track_matrix = track_matrix.astype(np.int64)
         if len(program_matrix) > 0:
-            used_instruments[int(program_matrix[0][1])] += 1
-            instr_num = used_instruments[int(program_matrix[0][1])]
+            if program_matrix.size != 0:
+                used_instruments[int(program_matrix[0][1])] += 1
+                instr_num = used_instruments[int(program_matrix[0][1])]
             # print(instr_num)
+            else:
+                if track_rp != -1:
+                    program_matrix = np.append(program_matrix, [[0], [track_rp]])
+                    program_matrix = np.reshape(program_matrix, (-1, 2))
+                    msg_array = np.full(13, -1)
+                    msg_array[-1] = 0
+                    msg_array[4] = track_rp
+                    track_matrix = np.append(track_matrix, [msg_array])
+                    orig_instr = track_rp
+                    if track_rp <= 8:
+                        track_rp = -1
+                    elif 17 <= track_rp <= 24:
+                        organ_count -= 1
+                        if organ_count == 0:
+                            track_rp = -1
+                else:
+                    program_matrix = np.append(program_matrix, [[0], [0]])
+                    program_matrix = np.reshape(program_matrix, (-1, 2))
+                    msg_array = np.full(13, -1)
+                    msg_array[-1] = 0
+                    track_matrix = np.append(track_matrix, [msg_array])
+                used_instruments[int(program_matrix[0][1])] += 1
+                instr_num = used_instruments[int(program_matrix[0][1])]
             track_matrix = track_matrix.reshape((-1, 13))
             track_matrix = index_based_matrix_appender(track_matrix, program_matrix)
             track_matrix = add_column_to_2d_array(track_matrix, instr_num)
             track_matrix = add_column_to_2d_array(track_matrix, orig_instr)
             matrix = np.append(matrix, track_matrix)
             matrix = matrix.reshape((-1, 16))
+
+
         # print(track_matrix[0:100])
 
     matrix = matrix.reshape((-1, 16))
     matrix = np.unique(matrix, axis=0)
     matrix = matrix.astype(np.int64)
+
+
+
+    '''sorting starts here'''
     # deprecated order: from first to last: Time, Program_change(Instrument), Tempo, time_sig, key_sig, control_change
     cols_to_sort = [4, 6, 7, 11]
 
@@ -224,6 +241,7 @@ def MIDI_data_extractor(midi_file_path,
         control_change_control, control_change_value, program_change_program,
         end/start_marking, set_tempo_tempo,
         time_sig_num, time_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
-        key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
-
+        key_sig(turn into numbers), [time], (optional: instrument_type), instrument_num, orig_instrument_type]'''
+    if not include_instr_type:
+        matrix = np.delete(matrix, 13, 1)
     return matrix
