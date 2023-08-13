@@ -65,11 +65,10 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True):
     # print(tracks.keys())
     midi_file.save(midi_file_path)
 
-'''
+
 input_file_path = r"Bach MIDIs/18 Leipzig Chorale Preludes for Organ/bwv651.mid"
 output_file_path = r"bwv651_3.mid"
-data_0 = MIDI_data_extractor(input_file_path, relative_time=True)
+data_0 = MIDI_data_extractor(input_file_path, relative_time=True)[:, [0,1,2,3,4,5,6,7,8,9,10,11,12,14,15]]
 print(data_0)
 data_to_MIDI(data_0, output_file_path, relative_time=True)
 #print(MIDI_data_extractor(output_file_path))
-'''
