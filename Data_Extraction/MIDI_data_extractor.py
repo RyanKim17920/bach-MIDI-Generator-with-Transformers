@@ -2,6 +2,9 @@ from mido import MidiFile, tempo2bpm
 import numpy as np
 from tqdm import tqdm
 
+np.printoptions(threshold=np.inf)
+np.set_printoptions(threshold=np.inf)
+
 
 # helper functions
 def index_based_matrix_appender(matrix1, matrix2):
@@ -61,22 +64,20 @@ def MIDI_data_extractor(midi_file_path,
         index 9: instrument number (2nd violin for example)
         index 10: original instrument type
 
-    Ordering of importance (for model):
-        1. start/end token
-        2. program change
-        3. control change
-        4. time signature
-        5. key signature
-        6. tempo
-        7. note_on
+    Ordering of importance in values (for model):
+        0: start/end token
+        1: program change
+        2: control change
+        3: time signature
+        4: key signature
+        5: tempo
+        6: note_on
 
         Notes:
         --> adding new importance values is significantly easier than the old method
         --> note_off is treated as note_off with velocity 0 to reduce data size
     """
-    np.printoptions(threshold=np.inf)
-    np.set_printoptions(linewidth=np.inf)
-    np.set_printoptions(threshold=np.inf)
+
     midi_file = MidiFile(midi_file_path)
     matrix = np.array([], dtype=np.int16)
     used_instruments = np.zeros(128)
@@ -84,6 +85,7 @@ def MIDI_data_extractor(midi_file_path,
     organ_count = 0
 
     for i, track in tqdm(enumerate(midi_file.tracks), disable=False if verbose >= 1 else True):
+        # tqdm progress bar if verbose
         if verbose == 2:
             print('Track {}: {}'.format(i, track.name))
         track_matrix = np.array([], dtype=np.int16)
@@ -259,5 +261,3 @@ def MIDI_data_extractor(midi_file_path,
     if not include_instr_type:
         matrix = np.delete(matrix, 8, 1)
     return matrix
-
-print(MIDI_data_extractor(r"C:\Users\ilove\CODING\PYStuff\MusicNet\Midi2Numpy\MIDI-Generator-with-Transformers\Bach MIDIs\Organ Works\An Wasserflussen Babylon - BWV 653 (By the Waters of Babylon).mid"))
