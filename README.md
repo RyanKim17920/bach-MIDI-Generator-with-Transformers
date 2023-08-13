@@ -11,3 +11,16 @@ Thanks!
 The MIDI files were extracted from: http://www.jsbach.net/midi/ (Yes, I got permission from the owner of this website, Dave, to modify the MIDI files for my needs).
 
 #### Current workings: Transformer model and final Data Preparation!
+
+#### To do:
+- [x] Create a MIDI to numpy array convertor
+- [x] Create a numpy array to MIDI convertor
+- [ ] Extract all Data
+- [ ] Create a Transformer model
+- [ ] Create generalization of extraction
+- [ ] Create a GUI for the model
+
+#### Note:
+If you are using your own MIDI files, and they are from the internet, they may be corrupted.
+Luckily, there is a way to fix this by uploading to MuseScore Desktop and re-exporting back. 
+Somehow, this fixes errors in the MIDI files.
