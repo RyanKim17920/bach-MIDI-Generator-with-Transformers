@@ -63,10 +63,11 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True):
     # print(tracks.keys())
     midi_file.save(midi_file_path)
 
-
+'''
 input_file_path = r"Bach MIDIs/Sonatas and Partitas for Solo Violin/Partita No. 2 in D minor - BWV 1004/vp2-5cha.mid"
 output_file_path = r"cha.mid"
 data_0 = MIDI_data_extractor(input_file_path, relative_time=True)
 print(data_0)
 data_to_MIDI(data_0, output_file_path, relative_time=True)
 # print(MIDI_data_extractor(output_file_path))
+'''
