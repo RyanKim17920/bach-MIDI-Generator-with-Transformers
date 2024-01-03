@@ -48,11 +48,18 @@ key_sig_dict = {'A': 0, 'A#m': 1, 'Ab': 2, 'Abm': 3, 'Am': 4, 'B': 5,
 def MIDI_data_extractor(midi_file_path,
                         verbose=0,
                         relative_time=True,
+                        relativity_to_instrument=False,
                         include_start=True,
                         include_end=True,
                         include_instr_type=True):
     """'
     Inputs: MIDI file
+            verbose: 0 for no output, 1 for track names, 2 for track names and messages
+            relative_time: True for relative time, False for absolute time
+            relativity_to_instrument: True for relative time to the instrument, False for relative time to any previous event
+            include_start: True for start token, False for no start token
+            include_end: True for end token, False for no end token
+            include_instr_type: True for instrument type, False for no instrument type
 
     Outputs: 2D array of MIDI data:
         Size: (num_messages, 11)
@@ -76,6 +83,9 @@ def MIDI_data_extractor(midi_file_path,
         Notes:
         --> adding new importance values is significantly easier than the old method
         --> note_off is treated as note_off with velocity 0 to reduce data size
+
+        todo: add a toggle for note_off with velocity 0 or not
+            config system to make much simpler
     """
 
     midi_file = MidiFile(midi_file_path)
@@ -130,8 +140,7 @@ def MIDI_data_extractor(midi_file_path,
                     ts_array = np.full(11, -1)
                     ts_array[-4] = cur_time
                     ts_array[0] = 3
-                    ts_array[
-                    1:5] = msg.numerator, msg.denominator, msg.clocks_per_click, msg.notated_32nd_notes_per_beat
+                    ts_array[1:5] = msg.numerator, msg.denominator, msg.clocks_per_click, msg.notated_32nd_notes_per_beat
                     matrix = np.append(matrix, [ts_array])
                     # global impact occurs here too
                 case 'key_signature':
@@ -216,29 +225,40 @@ def MIDI_data_extractor(midi_file_path,
     matrix = matrix[np.lexsort((matrix[:, 0], matrix[:, -4]))]
 
     if relative_time:
-        tracks_t_time = {}
-        # track time for each track
-        for i in tqdm(range(len(matrix)), disable=False if verbose >= 1 else True):
-            try:
-                cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
-                # get the name of the instrument based on original instrument and instrument number
-                if cur_name == f"o-1i-1":
-                    # if it's a global message, just set it to the first instrument that exists
-                    cur_name = list(tracks_t_time.keys())[0]
-                else:
-                    # if it's not global message, set it to the instrument name
-                    # if it doesn't already exist, create it with initialized time of 0
-                    if cur_name not in tracks_t_time:
-                        tracks_t_time[cur_name] = 0
+        if relativity_to_instrument:
+            tracks_t_time = {}
+            # track time for each track
+            for i in tqdm(range(len(matrix)), disable=False if verbose >= 1 else True):
+                try:
+                    cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
+                    # get the name of the instrument based on original instrument and instrument number
+                    if cur_name == f"o-1i-1":
+                        # if it's a global message, just set it to the first instrument that exists
+                        cur_name = list(tracks_t_time.keys())[0]
+                    else:
+                        # if it's not global message, set it to the instrument name
+                        # if it doesn't already exist, create it with initialized time of 0
+                        if cur_name not in tracks_t_time:
+                            tracks_t_time[cur_name] = 0
 
-                time = matrix[i][-4] - tracks_t_time[cur_name]
-                # get the time difference between the current time and the last time
-                tracks_t_time[cur_name] = matrix[i][-4]
-                # set the last time to the current time
-                matrix[i][-4] = time
-                # set the time to the time difference
-            except IndexError:
-                pass
+                    time = matrix[i][-4] - tracks_t_time[cur_name]
+                    # get the time difference between the current time and the last time
+                    tracks_t_time[cur_name] = matrix[i][-4]
+                    # set the last time to the current time
+                    matrix[i][-4] = time
+                    # set the time to the time difference
+                except IndexError:
+                    pass
+        else:
+            # if not relative to instrument, just set it to the time difference between the current time and the last time
+            cur = 0
+            for i in tqdm(range(len(matrix)), disable=False if verbose >= 1 else True):
+                try:
+                    time = matrix[i][-4] - cur
+                    cur = matrix[i][-4]
+                    matrix[i][-4] = time
+                except IndexError:
+                    pass
     if include_end:
         end_track = np.full(11, -1)
         end_track[-4] = 0 if relative_time else matrix[len(matrix) - 1][-4]
@@ -261,3 +281,4 @@ def MIDI_data_extractor(midi_file_path,
     if not include_instr_type:
         matrix = np.delete(matrix, 8, 1)
     return matrix
+

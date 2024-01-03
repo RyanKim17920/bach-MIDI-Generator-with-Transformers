@@ -9,22 +9,32 @@ key_sig_dict = {0: 'A', 1: 'A#m', 2: 'Ab', 3: 'Abm', 4: 'Am', 5: 'B', 6: 'Bb', 7
                 25: 'Fm', 26: 'G', 27: 'G#m', 28: 'Gb', 29: 'Gm'}
 
 
-def data_to_MIDI(matrix, midi_file_path, relative_time=True):
-    notes = 0
+def data_to_MIDI(matrix, midi_file_path, relative_time=True, relativity_to_instrument=False):
     midi_file = MidiFile()
     tracks = {}
     tracks_t_time = {}
+    total_time = 0
     if len(matrix) > 2:
         for i in tqdm(range(1, len(matrix) - 1)):
             cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
             event_type = matrix[i][0]
             if cur_name == f"o-1i-1":
+                # any meta messages (not based on instrument)
                 cur_name = list(tracks.keys())[0]
                 if not relative_time:
                     time = (matrix[i][7] - tracks_t_time[cur_name])
                     tracks_t_time[cur_name] = matrix[i][7]
                 else:
-                    time = matrix[i][7]
+                    if relativity_to_instrument:
+                        time = matrix[i][7]
+                        # this is because messages are based from previous instruments, and if input is already relative, then it will be relative to the previous instrument, no need to change
+                    else:
+                        total_time += matrix[i][7]
+                        # total time counter
+                        time = total_time - tracks_t_time[cur_name]
+                        # total time - last time of instrument = time since last instrument
+                        tracks_t_time[cur_name] = total_time
+
                 if event_type == 5:
                     tracks[cur_name].append(MetaMessage('set_tempo', tempo=bpm2tempo(matrix[i][1]), time=time))
                 if event_type == 3:
@@ -45,7 +55,16 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True):
                     time = (matrix[i][7] - tracks_t_time[cur_name])
                     tracks_t_time[cur_name] = matrix[i][7]
                 else:
-                    time = matrix[i][7]
+                    if relativity_to_instrument:
+                        time = matrix[i][7]
+                        # this is because messages are based from previous instruments, and if input is already relative, then it will be relative to the previous instrument, no need to change
+                    else:
+                        total_time += matrix[i][7]
+                        # total time counter
+                        time = total_time - tracks_t_time[cur_name]
+                        # total time - last time of instrument = time since last instrument
+                        tracks_t_time[cur_name] = total_time
+
                 if event_type == 6:
                     tracks[cur_name].append(Message('note_on', note=matrix[i][1], velocity=matrix[i][2], time=time))
                 if event_type == 7:
@@ -62,6 +81,7 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True):
     # print(midi_file)
     # print(tracks.keys())
     midi_file.save(midi_file_path)
+
 
 '''
 input_file_path = r"Bach MIDIs/Sonatas and Partitas for Solo Violin/Partita No. 2 in D minor - BWV 1004/vp2-5cha.mid"
