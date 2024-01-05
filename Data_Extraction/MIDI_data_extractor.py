@@ -53,7 +53,7 @@ def MIDI_data_extractor(midi_file_path,
                         include_end=True,
                         include_instr_type=True):
     """'
-    Inputs: MIDI file
+    Inputs: midi_file_path: path to MIDI file
             verbose: 0 for no output, 1 for track names, 2 for track names and messages
             relative_time: True for relative time, False for absolute time
             relativity_to_instrument: True for relative time to the instrument, False for relative time to any previous event
@@ -64,8 +64,34 @@ def MIDI_data_extractor(midi_file_path,
     Outputs: 2D array of MIDI data:
         Size: (num_messages, 11)
 
-        index 0: type of data (start/end token, note_on, control_change, program_change, etc.)
-        index 1-6: data values (extra indexes included for future expansion)
+        index 0: type of data (
+            0: start/end token,
+            1: program_change
+            2: control_change
+            3: time signature
+            4: key signature
+            5: tempo
+            6: note_on)
+        index 1-6: data values (extra indexes included for future expansion):
+            start/end token:
+                index 1: 0 for start token, 1 for end token
+            program_change:
+                index 1: program number
+            control_change:
+                index 1: control number
+                index 2: control value
+            time signature:
+                index 1: numerator
+                index 2: denominator
+                index 3: clocks per click
+                index 4: notated 32nd notes per beat
+            key signature:
+                index 1: key signature number
+            tempo:
+                index 1: tempo in bpm
+            note_on:
+                index 1: note number
+                index 2: velocity
         index 7: time (relative or absolute)
         index 8: current instrument type (removable)
         index 9: instrument number (2nd violin for example)
@@ -84,7 +110,7 @@ def MIDI_data_extractor(midi_file_path,
         --> adding new importance values is significantly easier than the old method
         --> note_off is treated as note_off with velocity 0 to reduce data size
 
-        todo: add a toggle for note_off with velocity 0 or not
+        todo: add a toggle for note_off with velocity 0 or not,
             config system to make much simpler
     """
 

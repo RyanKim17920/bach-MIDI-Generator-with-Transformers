@@ -1,7 +1,7 @@
 import numpy as np
 import pickle
 from tqdm import tqdm
-
+from torch import tensor,Tensor
 np.set_printoptions(threshold=np.inf)
 np.set_printoptions(linewidth=np.inf)
 
@@ -16,8 +16,11 @@ class Tokenizer():
         self.num_to_times = {}
         self.num_to_instruments = {}
 
-    def fit(self, all_data: np.ndarray):
+    def fit(self, all_data):
         # change dtype to int
+        if type(all_data) == tensor or type(all_data) == Tensor:
+            all_data = all_data.numpy()
+
         all_data = all_data.astype(np.int64)
         values_count = 0
         time_count = 0
@@ -46,8 +49,10 @@ class Tokenizer():
             instruments_count += 1
         print('instruments done')
 
-    def tokenize(self, all_data: np.ndarray):
+    def tokenize(self, all_data):
         # change dtype to int
+        if type(all_data) == tensor or type(all_data) == Tensor:
+            all_data = all_data.numpy()
         all_data = all_data.astype(np.int64)
         tokenized_data = np.zeros((all_data.shape[0], 3), dtype=np.int64)
         for i in tqdm(range(all_data.shape[0])):
@@ -66,8 +71,10 @@ class Tokenizer():
             tokenized_data.append(self.tokenize(i))
         return tokenized_data
 
-    def detokenize(self, tokenized_data: np.ndarray):
+    def detokenize(self, tokenized_data):
         # change dtype to int
+        if type(tokenized_data) == tensor or type(tokenized_data) == Tensor:
+            tokenized_data = tokenized_data.numpy()
         tokenized_data = tokenized_data.astype(np.int64)
         detokenized_data = np.zeros((tokenized_data.shape[0], 11), dtype=np.int64)
         for i in tqdm(range(tokenized_data.shape[0])):

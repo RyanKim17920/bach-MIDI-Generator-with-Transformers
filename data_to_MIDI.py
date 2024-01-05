@@ -1,7 +1,5 @@
 from mido import MidiFile, MidiTrack, Message, MetaMessage, bpm2tempo
 from tqdm import tqdm
-from Data_Extraction.MIDI_data_extractor import MIDI_data_extractor
-import numpy as np
 
 key_sig_dict = {0: 'A', 1: 'A#m', 2: 'Ab', 3: 'Abm', 4: 'Am', 5: 'B', 6: 'Bb', 7: 'Bbm', 8: 'Bm',
                 9: 'C', 10: 'C#', 11: 'C#m', 12: 'Cb', 13: 'Cm', 14: 'D', 15: 'D#m', 16: 'Db',
@@ -18,6 +16,12 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True, relativity_to_instr
         for i in tqdm(range(1, len(matrix) - 1)):
             cur_name = f"o{matrix[i][-1]}i{matrix[i][-2]}"
             event_type = matrix[i][0]
+            if event_type == 0:
+                # start or stop token
+                if matrix[i][1] == 0:
+                    continue
+                else:
+                    break
             if cur_name == f"o-1i-1":
                 # any meta messages (not based on instrument)
                 cur_name = list(tracks.keys())[0]
