@@ -12,6 +12,7 @@ class TransformerWrapper(nn.Module):
             num_tokens_times,
             num_tokens_instruments,
             max_seq_len,
+            pre_attn_layers: list[AttentionLayers],
             attn_layers: AttentionLayers,
             emb_dropout=0.,
             post_emb_norm=False,
@@ -28,23 +29,27 @@ class TransformerWrapper(nn.Module):
         self.num_tokens_times = num_tokens_times
         self.num_tokens_instruments = num_tokens_instruments
 
+        self.pre_attn_layers = pre_attn_layers
+
         self.max_seq_len = max_seq_len
 
         self.l2norm_embed = l2norm_embed
-        self.token_emb_values = TokenEmbedding(emb_dim, num_tokens_values, l2norm_embed=l2norm_embed)
-        self.token_emb_times = TokenEmbedding(emb_dim, num_tokens_times, l2norm_embed=l2norm_embed)
-        self.token_emb_instruments = TokenEmbedding(emb_dim, num_tokens_instruments, l2norm_embed=l2norm_embed)
+
+        pre_attn_token_emb_dim = emb_dim // 3
+        self.token_emb_values = TokenEmbedding(pre_attn_token_emb_dim, num_tokens_values, l2norm_embed=l2norm_embed)
+        self.token_emb_times = TokenEmbedding(pre_attn_token_emb_dim, num_tokens_times, l2norm_embed=l2norm_embed)
+        self.token_emb_instruments = TokenEmbedding(pre_attn_token_emb_dim, num_tokens_instruments, l2norm_embed=l2norm_embed)
 
         no_abs_pos_emb = max_seq_len == 0 or not (use_abs_pos_emb and not attn_layers.has_pos_emb)
 
         if no_abs_pos_emb:
             self.pos_emb = always(0)
         elif scaled_sinu_pos_emb:
-            self.pos_emb = ScaledSinusoidalEmbedding(emb_dim)
+            self.pos_emb = ScaledSinusoidalEmbedding(pre_attn_token_emb_dim)
         else:
-            self.pos_emb = AbsolutePositionalEmbedding(emb_dim, max_seq_len, l2norm_embed=l2norm_embed)
+            self.pos_emb = AbsolutePositionalEmbedding(pre_attn_token_emb_dim, max_seq_len, l2norm_embed=l2norm_embed)
 
-        self.post_emb_norm = nn.LayerNorm(emb_dim) if post_emb_norm else nn.Identity()
+        self.post_emb_norm = nn.LayerNorm(pre_attn_token_emb_dim) if post_emb_norm else nn.Identity()
         self.emb_dropout = nn.Dropout(emb_dropout)
 
         self.attn_layers = attn_layers
@@ -112,7 +117,16 @@ class TransformerWrapper(nn.Module):
         x_values = self.emb_dropout(x_values)
         x_times = self.emb_dropout(x_times)
         x_instruments = self.emb_dropout(x_instruments)
-        x = x_values + x_times + x_instruments
+
+        # pre attention layers
+        x_values = self.pre_attn_layers[0](x_values, mask=mask, mems=mems, cache=cache, return_hiddens=False,
+                                           seq_start_pos=seq_start_pos, **kwargs)
+        x_times = self.pre_attn_layers[1](x_times, mask=mask, mems=mems, cache=cache, return_hiddens=False,
+                                          seq_start_pos=seq_start_pos, **kwargs)
+        x_instruments = self.pre_attn_layers[2](x_instruments, mask=mask, mems=mems, cache=cache, return_hiddens=False,
+                                                seq_start_pos=seq_start_pos, **kwargs)
+
+        x = torch.cat([x_values,x_times,x_instruments], dim=-1)
         x, intermediates = self.attn_layers(x, mask=mask, mems=mems, cache=cache, return_hiddens=True,
                                             seq_start_pos=seq_start_pos, **kwargs)
 

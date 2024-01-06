@@ -34,6 +34,7 @@ class AutoregressiveWrapper(Module):
             prompts,
             seq_len,
             eos_token=None,
+            eos_first_token=None,
             temperature=1.,
             prompt_lens: Optional[Tensor] = None,
             filter_logits_fn: Callable = top_k,
@@ -64,7 +65,7 @@ class AutoregressiveWrapper(Module):
         cache = None
 
         # sampling up to seq_len
-
+        is_eos_tokens = None
         for _ in range(seq_len):
 
             if restrict_to_max_seq_len:
@@ -114,20 +115,23 @@ class AutoregressiveWrapper(Module):
 
             out = torch.cat((out, sample), dim=1)
 
-            if not exists(eos_token):
+            if not exists(eos_token) and not exists(eos_first_token):
                 continue
 
-            is_eos_tokens = torch.all(torch.eq(out[:, :, :], eos_token), dim=-1)
+            if exists(eos_token):
+                is_eos_tokens = torch.all(torch.eq(out[:, :, :], eos_token), dim=-1)
+                if torch.any(is_eos_tokens, dim=-1):
+                    break
 
-            if torch.any(is_eos_tokens, dim=-1):
-                break
-
-        if exists(eos_token):
+            if exists(eos_first_token):
+                is_eos_tokens = (out[:, :, 0] == eos_first_token)
+                if torch.any(is_eos_tokens, dim=-1):
+                    break
+        if exists(eos_token) or exists(eos_first_token) or (is_eos_tokens is not None):
             # mask out everything after the eos tokens
             shifted_is_eos_tokens = F.pad(is_eos_tokens, (1, -1))
             mask = shifted_is_eos_tokens.float().cumsum(dim=-1) >= 1
             out = torch.where(mask.unsqueeze(-1), Tensor([1, 0, 0]), out)
-
         out = out[:, t:]
 
         # out, = unpack(out, ps, '* n')
