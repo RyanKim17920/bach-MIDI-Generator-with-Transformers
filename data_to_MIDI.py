@@ -24,30 +24,33 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True, relativity_to_instr
                     break
             if cur_name == f"o-1i-1":
                 # any meta messages (not based on instrument)
-                cur_name = list(tracks.keys())[0]
-                if not relative_time:
-                    time = (matrix[i][7] - tracks_t_time[cur_name])
-                    tracks_t_time[cur_name] = matrix[i][7]
-                else:
-                    if relativity_to_instrument:
-                        time = matrix[i][7]
-                        # this is because messages are based from previous instruments, and if input is already relative, then it will be relative to the previous instrument, no need to change
+                try:
+                    cur_name = list(tracks.keys())[0]
+                    if not relative_time:
+                        time = (matrix[i][7] - tracks_t_time[cur_name])
+                        tracks_t_time[cur_name] = matrix[i][7]
                     else:
-                        total_time += matrix[i][7]
-                        # total time counter
-                        time = total_time - tracks_t_time[cur_name]
-                        # total time - last time of instrument = time since last instrument
-                        tracks_t_time[cur_name] = total_time
+                        if relativity_to_instrument:
+                            time = matrix[i][7]
+                            # this is because messages are based from previous instruments, and if input is already relative, then it will be relative to the previous instrument, no need to change
+                        else:
+                            total_time += matrix[i][7]
+                            # total time counter
+                            time = total_time - tracks_t_time[cur_name]
+                            # total time - last time of instrument = time since last instrument
+                            tracks_t_time[cur_name] = total_time
 
-                if event_type == 5:
-                    tracks[cur_name].append(MetaMessage('set_tempo', tempo=bpm2tempo(matrix[i][1]), time=time))
-                if event_type == 3:
-                    tracks[cur_name].append(
-                        MetaMessage('time_signature',
-                                    numerator=matrix[i][1],
-                                    denominator=matrix[i][2],
-                                    clocks_per_click=matrix[i][3],
-                                    notated_32nd_notes_per_beat=matrix[i][4], time=time))
+                    if event_type == 5:
+                        tracks[cur_name].append(MetaMessage('set_tempo', tempo=bpm2tempo(matrix[i][1]), time=time))
+                    if event_type == 3:
+                        tracks[cur_name].append(
+                            MetaMessage('time_signature',
+                                        numerator=matrix[i][1],
+                                        denominator=matrix[i][2],
+                                        clocks_per_click=matrix[i][3],
+                                        notated_32nd_notes_per_beat=matrix[i][4], time=time))
+                except:
+                    continue
             elif cur_name not in tracks:
                 tracks_t_time[cur_name] = 0
                 time = 0

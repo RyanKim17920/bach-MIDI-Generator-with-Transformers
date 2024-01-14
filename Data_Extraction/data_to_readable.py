@@ -156,6 +156,8 @@ key_sig_dict = {0: 'A', 1: 'A#m', 2: 'Ab', 3: 'Abm', 4: 'Am', 5: 'B', 6: 'Bb', 7
         time_sig_num, itme_sig_den, time_sig_clocksperclick, time_sig_notated_32nd,
         key_sig(turn into numbers), [time], instrument_type, instrument_num, orig_instrument_type]'''
 
+#OUTDATED
+
 def matrix_to_readable_data(matrix):
     readable_data = []
     for row in matrix:

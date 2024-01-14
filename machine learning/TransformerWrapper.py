@@ -31,25 +31,34 @@ class TransformerWrapper(nn.Module):
 
         self.pre_attn_layers = pre_attn_layers
 
+        self.values_emb_dim = pre_attn_layers[0].dim
+        self.times_emb_dim = pre_attn_layers[1].dim
+        self.instruments_emb_dim = pre_attn_layers[2].dim
+
         self.max_seq_len = max_seq_len
 
         self.l2norm_embed = l2norm_embed
 
-        pre_attn_token_emb_dim = emb_dim // 3
-        self.token_emb_values = TokenEmbedding(pre_attn_token_emb_dim, num_tokens_values, l2norm_embed=l2norm_embed)
-        self.token_emb_times = TokenEmbedding(pre_attn_token_emb_dim, num_tokens_times, l2norm_embed=l2norm_embed)
-        self.token_emb_instruments = TokenEmbedding(pre_attn_token_emb_dim, num_tokens_instruments, l2norm_embed=l2norm_embed)
+
+        self.token_emb_values = TokenEmbedding(self.values_emb_dim, num_tokens_values, l2norm_embed=l2norm_embed)
+        self.token_emb_times = TokenEmbedding(self.times_emb_dim, num_tokens_times, l2norm_embed=l2norm_embed)
+        self.token_emb_instruments = TokenEmbedding(self.instruments_emb_dim, num_tokens_instruments, l2norm_embed=l2norm_embed)
 
         no_abs_pos_emb = max_seq_len == 0 or not (use_abs_pos_emb and not attn_layers.has_pos_emb)
 
         if no_abs_pos_emb:
             self.pos_emb = always(0)
-        elif scaled_sinu_pos_emb:
-            self.pos_emb = ScaledSinusoidalEmbedding(pre_attn_token_emb_dim)
-        else:
-            self.pos_emb = AbsolutePositionalEmbedding(pre_attn_token_emb_dim, max_seq_len, l2norm_embed=l2norm_embed)
+        #ill make it generalized later
+        #elif scaled_sinu_pos_emb:
+        #    self.pos_emb = ScaledSinusoidalEmbedding(pre_attn_token_emb_dim)
+        #else:
+        #    self.pos_emb = AbsolutePositionalEmbedding(pre_attn_token_emb_dim, max_seq_len, l2norm_embed=l2norm_embed)
 
-        self.post_emb_norm = nn.LayerNorm(pre_attn_token_emb_dim) if post_emb_norm else nn.Identity()
+        self.post_emb_norm_values = nn.LayerNorm(self.values_emb_dim) if post_emb_norm else nn.Identity()
+        self.post_emb_norm_times = nn.LayerNorm(self.times_emb_dim) if post_emb_norm else nn.Identity()
+        self.post_emb_norm_instruments = nn.LayerNorm(self.instruments_emb_dim) if post_emb_norm else nn.Identity()
+
+
         self.emb_dropout = nn.Dropout(emb_dropout)
 
         self.attn_layers = attn_layers
@@ -108,9 +117,9 @@ class TransformerWrapper(nn.Module):
 
         # post embedding norm, purportedly leads to greater stabilization
 
-        x_values = self.post_emb_norm(x_values)
-        x_times = self.post_emb_norm(x_times)
-        x_instruments = self.post_emb_norm(x_instruments)
+        x_values = self.post_emb_norm_values(x_values)
+        x_times = self.post_emb_norm_times(x_times)
+        x_instruments = self.post_emb_norm_instruments(x_instruments)
 
         # embedding dropout
 
