@@ -57,7 +57,7 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True, relativity_to_instr
                 tracks[cur_name] = MidiTrack()
                 tracks[cur_name].append(Message('program_change', program=matrix[i][1], time=time))
 
-            else:
+            if cur_name != f"o-1i-1":
                 if not relative_time:
                     time = (matrix[i][7] - tracks_t_time[cur_name])
                     tracks_t_time[cur_name] = matrix[i][7]
@@ -85,8 +85,6 @@ def data_to_MIDI(matrix, midi_file_path, relative_time=True, relativity_to_instr
                     tracks[cur_name].append(MetaMessage('key_signature', key=key_sig_dict[matrix[i][1]], time=time))
     for track in tracks:
         midi_file.tracks.append(tracks[track])
-    # print(midi_file)
-    # print(tracks.keys())
     midi_file.save(midi_file_path)
 
 

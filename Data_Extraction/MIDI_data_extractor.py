@@ -190,7 +190,7 @@ def MIDI_data_extractor(midi_file_path,
                     # implement later: toggle on/off for this
 
             if not np.all(msg_array[0:-1] == -1):
-                # checks if it's not emptpy, if it isn't, add to track_matrix
+                # checks if it's not empty, if it isn't, add to track_matrix
                 track_matrix = np.append(track_matrix, [msg_array])
 
         track_matrix = track_matrix.astype(np.int64)
@@ -274,6 +274,7 @@ def MIDI_data_extractor(midi_file_path,
                     matrix[i][-4] = time
                     # set the time to the time difference
                 except IndexError:
+                    print("INDEXERROR")
                     pass
         else:
             # if not relative to instrument, just set it to the time difference between the current time and the last time
@@ -307,4 +308,3 @@ def MIDI_data_extractor(midi_file_path,
     if not include_instr_type:
         matrix = np.delete(matrix, 8, 1)
     return matrix
-
