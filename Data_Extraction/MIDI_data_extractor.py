@@ -51,7 +51,8 @@ def MIDI_data_extractor(midi_file_path,
                         relativity_to_instrument=False,
                         include_start=True,
                         include_end=True,
-                        include_instr_type=True):
+                        include_instr_type=True,
+                        exclude_data=[]):
     """'
     Inputs: midi_file_path: path to MIDI file
             verbose: 0 for no output, 1 for track names, 2 for track names and messages
@@ -138,56 +139,63 @@ def MIDI_data_extractor(midi_file_path,
             # print(msg.type)
             match msg.type:
                 case 'program_change':
-                    msg_array[0] = 1
-                    # this is set to 1 due to its importance in the model
-                    # the programs (instruments) have to be put almost first in order for generation to function
-                    msg_array[1] = msg.program
-                    # print(msg.program)
-                    program_matrix = np.append(program_matrix, [[msg_counter], [msg.program]])
-                    program_matrix = np.reshape(program_matrix, (-1, 2))
-                    if orig_instr == -1:
-                        orig_instr = msg.program
-                        # tracking original_instrument
-                    if msg.program <= 8 and track_rp == -1:
-                        track_rp = msg.program
-                        # tracking track_rp, which includes possible multi-handed instruments
-                        # these can, for some reason, have no program_changes for one of the hand
-                        # thus, it is worth tracking the program_change for future usage if necessary
-                    if 17 <= msg.program <= 24:
-                        organ_count += 2
-                        track_rp = msg.program
-                        # same here, but for organs, which can have up to three hands
+                    if 1 not in exclude_data:
+                        msg_array[0] = 1
+                        # this is set to 1 due to its importance in the model
+                        # the programs (instruments) have to be put almost first in order for generation to function
+                        msg_array[1] = msg.program
+                        # print(msg.program)
+                        program_matrix = np.append(program_matrix, [[msg_counter], [msg.program]])
+                        program_matrix = np.reshape(program_matrix, (-1, 2))
+                        if orig_instr == -1:
+                            orig_instr = msg.program
+                            # tracking original_instrument
+                        if msg.program <= 8 and track_rp == -1:
+                            track_rp = msg.program
+                            # tracking track_rp, which includes possible multi-handed instruments
+                            # these can, for some reason, have no program_changes for one of the hand
+                            # thus, it is worth tracking the program_change for future usage if necessary
+                        if 17 <= msg.program <= 24:
+                            organ_count += 2
+                            track_rp = msg.program
+                            # same here, but for organs, which can have up to three hands
                 case 'control_change':
-                    msg_array[0] = 2
-                    # control changes are very important for the model
-                    msg_array[1:3] = msg.control, msg.value
+                    if 2 not in exclude_data:
+                        msg_array[0] = 2
+                        # control changes are very important for the model
+                        msg_array[1:3] = msg.control, msg.value
                 case 'time_signature':
-                    # time signatures are global and also have importance
-                    ts_array = np.full(11, -1)
-                    ts_array[-4] = cur_time
-                    ts_array[0] = 3
-                    ts_array[1:5] = msg.numerator, msg.denominator, msg.clocks_per_click, msg.notated_32nd_notes_per_beat
-                    matrix = np.append(matrix, [ts_array])
-                    # global impact occurs here too
+                    if 3 not in exclude_data:
+                        # time signatures are global and also have importance
+                        ts_array = np.full(11, -1)
+                        ts_array[-4] = cur_time
+                        ts_array[0] = 3
+                        ts_array[1:5] = msg.numerator, msg.denominator, msg.clocks_per_click, msg.notated_32nd_notes_per_beat
+                        matrix = np.append(matrix, [ts_array])
+                        # global impact occurs here too
                 case 'key_signature':
-                    msg_array[0] = 4
-                    msg_array[1] = key_sig_dict[msg.key]
+                    if 4 not in exclude_data:
+                        msg_array[0] = 4
+                        msg_array[1] = key_sig_dict[msg.key]
                 case 'set_tempo':
-                    st_array = np.full(11, -1)
-                    st_array[-4] = cur_time
-                    st_array[0] = 5
-                    st_array[1] = tempo2bpm(msg.tempo)
-                    matrix = np.append(matrix, [st_array])
-                    # appending to matrix, not track matrix, because this has a global impact (impacts all tracks)
+                    if 5 not in exclude_data:
+                        st_array = np.full(11, -1)
+                        st_array[-4] = cur_time
+                        st_array[0] = 5
+                        st_array[1] = tempo2bpm(msg.tempo)
+                        matrix = np.append(matrix, [st_array])
+                        # appending to matrix, not track matrix, because this has a global impact (impacts all tracks)
                 case 'note_on':
-                    msg_array[0] = 6
-                    # this is set to this value (not like 1 or 0) due to order of importance in the model
-                    msg_array[1:3] = msg.note, msg.velocity
+                    if 6 not in exclude_data:
+                        msg_array[0] = 6
+                        # this is set to this value (not like 1 or 0) due to order of importance in the model
+                        msg_array[1:3] = msg.note, msg.velocity
                 case 'note_off':
-                    msg_array[0] = 6
-                    msg_array[1:3] = msg.note, 0
-                    # note_off is often considered a note with zero velocity and can be removed for conciseness
-                    # implement later: toggle on/off for this
+                    if 6 not in exclude_data:
+                        msg_array[0] = 6
+                        msg_array[1:3] = msg.note, 0
+                        # note_off is often considered a note with zero velocity and can be removed for conciseness
+                        # implement later: toggle on/off for this
 
             if not np.all(msg_array[0:-1] == -1):
                 # checks if it's not empty, if it isn't, add to track_matrix
