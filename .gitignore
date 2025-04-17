@@ -28,3 +28,7 @@ node_modules
 *.npy
 
 Test/*
+# data
+midiv100000/ 
+# virtualenv
+mid/
