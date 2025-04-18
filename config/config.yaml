@@ -1,0 +1,76 @@
+raw_midi_dir: "data/raw_midi"
+preprocessed_dir: "data/preprocessed_tokens"
+output_dir: "outputs" # For generated MIDI, checkpoints etc.
+checkpoint_dir: "outputs/checkpoints"
+generation_dir: "outputs/generated"
+
+# --- MIDI Processing ---
+processor:
+  time_step: 0.01
+  velocity_bins: 32
+  max_time_shift_seconds: 10.0
+  max_note_duration_seconds: 10.0
+  max_local_instruments: 16
+  use_note_off: False
+
+# --- Dataset ---
+dataset:
+  sequence_length: 8192 # Example, adjust as needed (B)
+  augmentation_shift: 1024 # Example, adjust as needed
+
+# --- Model Hyperparameters ---
+model:
+  module: x_transformers
+  class: Decoder
+  params:
+    vocab_size: 1700
+    dim: 512
+    depth: 6
+    heads: 4
+    attn_num_mem_kv: 16
+    ff_glu: True
+
+wrapper:
+  module: x_transformers
+  class: AutoregressiveWrapper
+  params: {}    # or pass wrapper‐specific args
+
+
+# --- Training ---
+training:
+  strategy:
+      name: "deepspeed"       # or "ddp", "ddp_cpu", null
+      params: {}  
+  # Optimizer settings
+  optimizer:
+    name: "FusedAdam"           # e.g. "AdamW" or "FusedAdam"
+    params:
+      lr: 5e-4
+      betas: [0.9, 0.98]
+      eps: 1e-8
+      weight_decay: 0.1
+
+  # Scheduler settings
+  scheduler:
+    name: "linear_cosine"       # "linear", "cosine", "linear_cosine"
+    params:
+      warmup_steps: 750
+      total_steps: null         # null → auto‐compute from data & epochs
+      min_lr_ratio: 0.1         # final LR = lr * min_lr_ratio (only for cosine)
+
+  max_epochs: 2
+  batch_size_per_gpu: 1
+  grad_accumulation_steps: 128
+  num_workers: 1
+  precision: "bf16-mixed"
+  gradient_clip_val: 1.0
+
+# --- Logging ---
+wandb:
+  project_name: "transformer_midi_gen"
+  run_name: "transformer_l8k_run1" # Example run name
+  log_model: "all" # Or "best", None
+
+# --- Reconstruction Check ---
+checker:
+  test_midi_file: "data/raw_midi/your_test_file.mid"

@@ -1,0 +1,3 @@
+PAD_IDX = 0
+START_IDX = 1
+END_IDX = 2

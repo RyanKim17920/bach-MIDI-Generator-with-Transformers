@@ -1,26 +1,46 @@
 # MIDI Generator with Transformers
-##### Using Machine Learning and Transformers in Python to generate classical music MIDI files.
 
-This is currently a work in progress (WIP) of the music generator. 
-As of now, I am still trying to create a MIDI to numpy array convertor.
+**A work‑in‑progress**: convert MIDI → token sequences → train a Transformer → regenerate MIDI.
 
-As this project is currently unfinished, the repository will be a highly changing and active.
-If you have any solutions to issues that occur within the code, please request a merge request.
-Thanks! 
+## Features
 
-The MIDI files were extracted from: http://www.jsbach.net/midi/ (Yes, I got permission from the owner of this website, Dave, to modify the MIDI files for my needs).
+- Flexible tokenization with `MIDIProcessor`
+- On‑the‑fly or preprocessed PyTorch `Dataset` (`MIDIDataset`, `MIDIDatasetPreprocessed`)
+- Config‑driven training with PyTorch Lightning + Deepspeed / DDP
+- Full round‑trip: MIDI → tokens → MIDI
+- Unit tests with `pytest`
 
-#### Current workings: Transformer model and final Data Preparation!
+## Requirements
 
-#### To do:
-- [x] Create a MIDI to numpy array convertor
-- [x] Create a numpy array to MIDI convertor
-- [ ] Extract all Data
-- [ ] Create a Transformer model
-- [ ] Create generalization of extraction
-- [ ] Create a GUI for the model
+```bash
+pip install -r requirements.txt
+```
 
-#### Note:
-If you are using your own MIDI files, and they are from the internet, they may be corrupted.
-Luckily, there is a way to fix this by uploading to MuseScore Desktop and re-exporting back. 
-Somehow, this fixes errors in the MIDI files.
+## Quickstart
+
+1. Edit config/config.yaml (set raw_midi_dir, preprocessed_dir, model & training params).
+2. Preprocess:
+
+```bash
+python scripts/preprocess_data.py
+```
+
+3. Train:
+
+```bash
+python scripts/train_model.py
+```
+
+4. Check reconstruction:
+
+```bash
+python scripts/check_reconstruction.py
+```
+
+## Testing
+
+Testing
+
+```bash
+pytest tests/
+```
