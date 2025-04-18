@@ -1,4 +1,4 @@
-raw_midi_dir: "data/raw_midi"
+raw_midi_dir: "data/raw_data"
 preprocessed_dir: "data/preprocessed_tokens"
 output_dir: "outputs" # For generated MIDI, checkpoints etc.
 checkpoint_dir: "outputs/checkpoints"
@@ -15,8 +15,8 @@ processor:
 
 # --- Dataset ---
 dataset:
-  sequence_length: 8192 # Example, adjust as needed (B)
-  augmentation_shift: 1024 # Example, adjust as needed
+  sequence_length: 8192 
+  augmentation_shift: 1024 
 
 # --- Model Hyperparameters ---
 model:
@@ -74,3 +74,18 @@ wandb:
 # --- Reconstruction Check ---
 checker:
   test_midi_file: "data/raw_midi/your_test_file.mid"
+
+# --- Generation Settings ---
+generation:
+  # Path to a trained checkpoint; if null, will use first file in checkpoint_dir
+  checkpoint_path: null
+  # Number of samples to generate
+  num_samples: 10
+  # Optional: provide a MIDI file as prompt; if set, its tokens will be used as prefix
+  prompt_midi_file: null
+  # Or a list of prompt tokens (e.g. [1] for START_IDX)
+  prompt_tokens: [1]
+  # Length of sequence to generate (number of tokens)
+  generate_length: ${dataset.sequence_length}
+  # Sampling temperature
+  temperature: 1.0

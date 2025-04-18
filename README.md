@@ -31,10 +31,10 @@ python scripts/preprocess_data.py
 python scripts/train_model.py
 ```
 
-4. Check reconstruction:
+4. Generate:
 
 ```bash
-python scripts/check_reconstruction.py
+python scripts/generate.py
 ```
 
 ## Testing
@@ -43,4 +43,10 @@ Testing
 
 ```bash
 pytest tests/
+```
+
+Check reconstruction:
+
+```bash
+python scripts/check_reconstruction.py
 ```
