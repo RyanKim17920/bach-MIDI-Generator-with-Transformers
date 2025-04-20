@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Default values used if not provided in config/init
 DEFAULT_MAX_LOCAL_INSTRUMENTS = 16
-DEFAULT_DRUM_PROGRAM_TOKEN_OFFSET = 128
+DEFAULT_DRUM_PROGRAM_TOKEN_OFFSET = 12832
 DEFAULT_VELOCITY_VALUE = 64
 DEFAULT_TIME_EPSILON = 0.001
 DEFAULT_MIN_NOTE_DURATION_SECONDS = 0.005
@@ -50,7 +50,8 @@ class MIDIProcessor:
                  drum_program_token_offset: int = DEFAULT_DRUM_PROGRAM_TOKEN_OFFSET,
                  default_velocity: int = DEFAULT_VELOCITY_VALUE,
                  time_epsilon: float = DEFAULT_TIME_EPSILON,
-                 min_note_duration_seconds: float = DEFAULT_MIN_NOTE_DURATION_SECONDS
+                 min_note_duration_seconds: float = DEFAULT_MIN_NOTE_DURATION_SECONDS,
+                 min_sequence_length: int = None,
                 ):
 
         # --- Validate Inputs ---
@@ -78,6 +79,7 @@ class MIDIProcessor:
         self.time_epsilon_val = time_epsilon
         self.min_note_duration_seconds_val = min_note_duration_seconds
 
+        self.min_sequence_length = min_sequence_length 
         # --- Vocabulary Definition using constants ---
         _current_offset = 0
         self.PAD = PAD_IDX; _current_offset = max(_current_offset, self.PAD + 1)
@@ -626,7 +628,12 @@ class MIDIProcessor:
             # Add START and END tokens
             final_tokens = [self.START] + core_tokens + [self.END]
             logger.info(f"Successfully processed {filename}. Total tokens: {len(final_tokens)}")
-
+            if self.min_sequence_length is not None and len(final_tokens) < self.min_sequence_length:
+                logger.warning(
+                    f"Skipping {filename}: token length {len(final_tokens)} < min_sequence_length "
+                    f"{self.min_sequence_length}"
+                )
+                return None
             # Return as numpy array for consistency with dataset loading
             return {'metadata': metadata, 'tokens': np.array(final_tokens, dtype=np.int32)}
         except Exception as e:

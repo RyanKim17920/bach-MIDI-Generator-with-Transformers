@@ -33,3 +33,5 @@ midiv100000/
 # virtualenv
 mid/
 old_stuff/
+data/raw_data
+data/processed_data

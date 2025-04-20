@@ -1,4 +1,5 @@
 raw_midi_dir: "data/raw_data"
+verbose: false
 preprocessed_dir: "data/preprocessed_tokens"
 output_dir: "outputs" # For generated MIDI, checkpoints etc.
 checkpoint_dir: "outputs/checkpoints"
@@ -12,6 +13,7 @@ processor:
   max_note_duration_seconds: 10.0
   max_local_instruments: 16
   use_note_off: False
+  min_sequence_length: 1000
 
 # --- Dataset ---
 dataset:

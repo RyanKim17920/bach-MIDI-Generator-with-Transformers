@@ -5,7 +5,7 @@ import pretty_midi
 from src.midi_processor import MIDIProcessor
 
 def load_config(path="config/config.yaml"):
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 def print_midi_info(midi_obj: pretty_midi.PrettyMIDI, label: str):
@@ -19,8 +19,10 @@ def print_midi_info(midi_obj: pretty_midi.PrettyMIDI, label: str):
     logger.info(f"{label} | Instruments: {num_inst}, Notes: {total_notes}, End Time: {end_time:.3f}s")
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     cfg = load_config()
+    # Set log level from YAML verbose flag
+    log_level = logging.DEBUG if cfg.get('verbose', False) else logging.INFO
+    logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(message)s")
     TEST_MIDI = cfg['checker']['test_midi_file']
     OUT_DIR = cfg['checker'].get('output_dir', 'reconstruction_test_output')
     os.makedirs(OUT_DIR, exist_ok=True)

@@ -5,14 +5,15 @@ from tqdm import tqdm
 from src.midi_processor import MIDIProcessor
 
 def load_config(path="config/config.yaml"):
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 def preprocess_directory(midi_dir: str,
                          output_dir: str,
                          processor: MIDIProcessor,
-                         walk: bool = False,
-                         override: bool = False):
+                         walk: bool = True,
+                         override: bool = False,
+                         verbose: bool = False):
     logger = logging.getLogger(__name__)
     if not os.path.isdir(midi_dir):
         logger.error(f"Raw MIDI directory not found: {midi_dir}")
@@ -30,7 +31,7 @@ def preprocess_directory(midi_dir: str,
                  for f in os.listdir(midi_dir)
                  if f.lower().endswith(('.mid', '.midi'))]
 
-    logger.info(f"Processing {len(files)} MIDI files to '{output_dir}'")
+    logger.debug(f"Processing {len(files)} MIDI files to '{output_dir}'")
     for path in tqdm(files):
         name = os.path.splitext(os.path.basename(path))[0]
         out_path = os.path.join(output_dir, f"{name}.npy")
@@ -47,11 +48,16 @@ def preprocess_directory(midi_dir: str,
                 logger.error(f"Failed saving {out_path}: {e}")
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     cfg = load_config()
+    # Use ERROR level by default to suppress warnings/informational logs; DEBUG if verbose
+    log_level = logging.DEBUG if cfg.get('verbose', False) else logging.ERROR
+    logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(message)s")
     raw_dir = cfg['raw_midi_dir']
     pre_dir = cfg['preprocessed_dir']
+    walk_cfg = cfg.get('walk', True)
+    override_cfg = cfg.get('override', False)
     proc = MIDIProcessor(**cfg['processor'])
     preprocess_directory(raw_dir, pre_dir, proc,
-                         walk=False,
-                         override=False)
+                         walk=walk_cfg,
+                         override=override_cfg,
+                         verbose=cfg.get('verbose', False))

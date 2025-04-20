@@ -9,13 +9,15 @@ from src.midi_processor import MIDIProcessor
 
 
 def load_config(path="config/config.yaml"):
-    with open(path, 'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     cfg = load_config()
+    # Set log level from YAML verbose flag
+    log_level = logging.DEBUG if cfg.get('verbose', False) else logging.INFO
+    logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(message)s")
 
     gen_cfg = cfg.get('generation', {})
     # Determine checkpoint path

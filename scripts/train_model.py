@@ -17,7 +17,7 @@ from src.midi_processor import MIDIProcessor
 from src.midi_dataset_preprocessed import MIDIDatasetPreprocessed
 
 def load_config(path="config/config.yaml"):
-    with open(path,'r') as f:
+    with open(path, 'r', encoding='utf-8') as f:
         return yaml.safe_load(f)
 
 class MidiLightningModule(LightningModule):
@@ -116,8 +116,10 @@ class MidiLightningModule(LightningModule):
 
 
 def main():
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    # Load config and set log level from YAML verbose flag
     cfg = load_config()
+    log_level = logging.DEBUG if cfg.get('verbose', False) else logging.INFO
+    logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(message)s")
     
     strat_cfg = cfg['training'].get('strategy', {})
     strat_name = strat_cfg.get('name')
