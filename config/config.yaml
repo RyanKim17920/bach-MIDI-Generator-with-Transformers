@@ -1,77 +1,109 @@
 raw_midi_dir: "data/raw_data"
-verbose: false
 preprocessed_dir: "data/preprocessed_tokens"
 output_dir: "outputs" # For generated MIDI, checkpoints etc.
 checkpoint_dir: "outputs/checkpoints"
 generation_dir: "outputs/generated"
 
+# --- Logging ---
+# Defines the logging verbosity. Options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+logging_level: "INFO"
+
 # --- MIDI Processing ---
 processor:
-  time_step: 0.01
+  time_step: 0.1
   velocity_bins: 32
-  max_time_shift_seconds: 10.0
+  max_time_shift_seconds: 2
   max_note_duration_seconds: 10.0
-  max_local_instruments: 16
+  max_local_instruments: 32
   use_note_off: False
   min_sequence_length: 1000
 
 # --- Dataset ---
 dataset:
-  sequence_length: 8192 
+  sequence_length: 8192
   augmentation_shift: 1024 
+  validation_split_percentage: 2
 
 # --- Model Hyperparameters ---
 model:
-  module: x_transformers
-  class: Decoder
-  params:
-    vocab_size: 1700
-    dim: 512
-    depth: 6
-    heads: 4
+  decoder_params:
+    dim: 768
+    depth: 12
+    heads: 10
     attn_num_mem_kv: 16
     ff_glu: True
+    sandwich_norm: True
+    rotary_pos_emb: True
+    macaron: True
+    sandwich_coef: 6
+    ff_no_bias: True
+    use_scalenorm: True
+    attn_flash: True
+    # Add any other Decoder specific params here
 
-wrapper:
-  module: x_transformers
-  class: AutoregressiveWrapper
-  params: {}    # or pass wrapper‐specific args
+  transformer_wrapper_params:
+    num_tokens: 839 # Vocabulary size
+    max_seq_len: ${dataset.sequence_length} # Max sequence length for TransformerWrapper
+    # Add any other TransformerWrapper specific params here (e.g., attn_types)
+
+  autoregressive_wrapper_params:
+    # pad_value and ignore_index will be set from constants.PAD_IDX in train_script
+    mask_prob: 0.0
 
 
 # --- Training ---
 training:
+  accelerator: "auto"       # "cpu", "gpu", "auto" (let PL decide)
   strategy:
-      name: "deepspeed"       # or "ddp", "ddp_cpu", null
-      params: {}  
+      name: null       # or "ddp", "ddp_cpu", null
+      params: {}
+  resume_from_checkpoint: "/root/bach-MIDI-Generator-with-Transformers/outputs/checkpoints/last.ckpt" # Path to a checkpoint to resume training from, e.g., "outputs/checkpoints/last.ckpt"
+  
   # Optimizer settings
   optimizer:
-    name: "FusedAdam"           # e.g. "AdamW" or "FusedAdam"
+    name: FusedAdam           # e.g. "AdamW" or "FusedAdam"
     params:
-      lr: 5e-4
+      lr: 5e-4                # <<< Ensure this is a valid number
       betas: [0.9, 0.98]
       eps: 1e-8
       weight_decay: 0.1
+  
+  validation_generation:
+    enable: true                   # Whether to generate samples during validation
+    num_samples: 2                 # How many MIDI samples to generate per validation check
+    temperature: 1.0               # Generation temperature
+    prompt_tokens: [1]             # Default prompt tokens (START token)
+    generate_length: 4096          # Length to generate during validation
+    max_generations: 5 
+    generation_epoch_interval: 0.25
 
   # Scheduler settings
-  scheduler:
-    name: "linear_cosine"       # "linear", "cosine", "linear_cosine"
-    params:
-      warmup_steps: 750
-      total_steps: null         # null → auto‐compute from data & epochs
-      min_lr_ratio: 0.1         # final LR = lr * min_lr_ratio (only for cosine)
+  #scheduler:
+  #  name: "linear_cosine"       # "linear", "cosine", "linear_cosine"
+  #  params:
+  #    warmup_steps: 750
+  #    total_steps: null         # null → auto‐compute from data & epochs
+  #    min_lr_ratio: 0.1         # final LR = lr * min_lr_ratio (only for cosine)
 
-  max_epochs: 2
+  max_epochs: 5
   batch_size_per_gpu: 1
-  grad_accumulation_steps: 128
-  num_workers: 1
+  grad_accumulation_steps: 2096
+  num_workers: 7
   precision: "bf16-mixed"
   gradient_clip_val: 1.0
+  # --- Trainer specific parameters ---
+  val_check_interval: 0.05 # Check validation every 5% of an epoch
+  #num_sanity_val_steps: 2     # Number of validation batches to check before training starts
+  log_every_n_steps: 1
 
 # --- Logging ---
 wandb:
+  enable: true
+  api_key: None
   project_name: "transformer_midi_gen"
   run_name: "transformer_l8k_run1" # Example run name
   log_model: "all" # Or "best", None
+  save_dir: "wandb"
 
 # --- Reconstruction Check ---
 checker:

@@ -52,3 +52,5 @@ wandb==0.19.9
 win32_setctime==1.2.0
 x-transformers==2.2.12
 yarl==1.20.0
+torchvision==0.21.0
+##deepspeed==0.16.7 # optional if you want to use deepspeed for training

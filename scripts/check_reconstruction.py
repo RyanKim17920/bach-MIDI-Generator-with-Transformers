@@ -20,9 +20,11 @@ def print_midi_info(midi_obj: pretty_midi.PrettyMIDI, label: str):
 
 if __name__ == "__main__":
     cfg = load_config()
-    # Set log level from YAML verbose flag
-    log_level = logging.DEBUG if cfg.get('verbose', False) else logging.INFO
-    logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(message)s")
+    # Get logging level from config string
+    log_level_str = cfg.get('logging_level', 'INFO').upper()
+    log_level = getattr(logging, log_level_str, logging.INFO) # Default to INFO if invalid
+
+    logging.basicConfig(level=log_level, format="%(asctime)s [%(levelname)s] %(message)s")
     TEST_MIDI = cfg['checker']['test_midi_file']
     OUT_DIR = cfg['checker'].get('output_dir', 'reconstruction_test_output')
     os.makedirs(OUT_DIR, exist_ok=True)

@@ -48,10 +48,15 @@ def preprocess_directory(midi_dir: str,
                 logger.error(f"Failed saving {out_path}: {e}")
 
 if __name__ == "__main__":
+    # Load config and set log level
     cfg = load_config()
-    # Use ERROR level by default to suppress warnings/informational logs; DEBUG if verbose
-    log_level = logging.DEBUG if cfg.get('verbose', False) else logging.ERROR
-    logging.basicConfig(level=log_level, format="%(asctime)s %(levelname)s %(message)s")
+    # New: Get logging level from config string
+    log_level_str = cfg.get('logging_level', 'INFO').upper()
+    log_level = getattr(logging, log_level_str, logging.INFO) # Default to INFO if invalid
+
+    logging.basicConfig(level=log_level, format="%(asctime)s [%(levelname)s] %(message)s")
+
+    # Initialize MIDIProcessor
     raw_dir = cfg['raw_midi_dir']
     pre_dir = cfg['preprocessed_dir']
     walk_cfg = cfg.get('walk', True)

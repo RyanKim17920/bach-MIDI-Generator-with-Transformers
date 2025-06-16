@@ -35,3 +35,6 @@ mid/
 old_stuff/
 data/raw_data
 data/processed_data
+data
+outputs
+*.mid
